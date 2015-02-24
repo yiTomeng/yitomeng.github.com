@@ -91,7 +91,7 @@
 	
 	<!-- display as entry -->
 		<h3 class="title">
-			<a href="/2015/02/20/alsa-1/" >alsaの勉強（1）__OSS</a>
+			<a href="/2015/02/20/alsa-1/" >alsaの勉強（1）ーー OSS</a>
 			<span class="date"> Feb 20 2015 </span>
 		</h3>
 	
@@ -103,10 +103,257 @@
 	<div class="col-md-12">
 	  
 	
-	  <pre><code>最近linux上の音声再生方法を集中しているけど、未だによくわからないですけど、とりあえずメモしておく。
+	  <pre><code>最近linux上の音声再生方法を集中しているけど、未だに全部わかっているわけではないけど、とりあえずメモしておく。
 
 最初の時、linux上の音声再生方法を調べたところ、OSSというものがある。OSSは「<span class="keyword">Open</span> <span class="keyword">Sound</span> System」の略称である。
-</code></pre><p>この方法はlinuxのシステムコールを呼び出す必要だ。その他、デバイス名も必要になる。OSSに関するデバイス名は/dev/dspとか、<br>/dev/mixerなどたくさんある。他のファイル（/dev/sndや/dev/audioなど）も音声と関わっている。一番重要なのは/dev/dsp<br>と/dev/mixerだと思う。まずこの2つデバイスを簡単に説明しましょう。<br>    /dev/dspは放送・録音用のデバイスである。<br>    OSSを使うと、システムコールopen()、close()、ioctl()、read()、write()が必要だ。普通にはopen()→ioctl()→close()のように音声<br>ファイルを再生する。open（）とclose()はファイル操作と同じように使ったら特に問題ないだが、音声放送に対して一番重要なのはデバイスの設定だと思う。<br>どういうふうに設定すればいいのか？何か設定必要なのか？</p>
+</code></pre><p>この方法はlinuxのシステムコールを呼び出す必要だ。その他、デバイス名も必要になる。OSSに関するデバイス名は/dev/dspとか、<br>/dev/mixerなどたくさんある。他のファイル（/dev/sndや/dev/audioなど）も音声と関わっている。一番重要なのは/dev/dsp<br>と/dev/mixerだと思う。まずこの2つデバイスを簡単に説明しましょう。<br>    /dev/dspは放送・録音用のデバイスである。<br>    OSSを使うと、システムコールopen()、close()、ioctl()、read()、write()が必要だ。<br>普通にはopen()→ioctl()→close()のように音声ファイルを再生する。open（）とclose()はファイル操作と同じくように使ったら特に問題ないだが、音声放送に対して一番重要なのはデバイスの設定だと思う。<br>どういうふうに設定すればいいのか？何かを設定必要なのか？<br>    まずは、音声ファイルを放送するとき一番重要なものを書いときましょう。<br>    ①チャンネル：音声ファイルの特性の一つであるチャンネルというものがある。今の時点で、たくさんモードがある。monoとstereoはよくみえるが、surround 5.1やsurround7.1もよく耳に入る。monoは1チャンネルしかない。stereoは2つチャンネルがあって、左右2つのスピーカーで音声を再生する方式のことである。ステレオフォニック(stereo)再生はモノフォニック(mono)再生に比較して、音像定位や音場感が加わり、再生音の臨場感が増す効果がある。</p>
+<pre><code>②サンプリング周波数：サンプリング周波数（サンプリングしゅうはすう）は、音声等のアナログ波形を、デジタルデータにするために必要な処理である標本化（サンプリング）で、単位時間あたりに標本を採る頻度。ふつう使われる単位はHz。
+
+③フォーマット：音データをコンピュータシステム上で格納する際のコンテナフォーマットである。たくさんの分類方法があり、一つは圧縮するかしないかを基準として、分けている。今回使っているのはMicrosoftのwavフォーマットである。このフォーマットは圧縮フォーマットと非圧縮フォーマット両方あるということだ。非圧縮フォーマットの方はPCMというものだ。
+</code></pre><p>今頭に入っているのは以上の三つしかない。（今後思いついたら、追加する）</p>
+<pre><code>以上の説明の通り、OSSを使うと、以上の三つを設定しなければならない。（OSSの使い方は簡単だから、直ちに例を挙げる）
+</code></pre><p>ⅰ.sound_lib.c:<br>‘’’<br>/<strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>**</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></p>
+<ul>
+<li>SYSTEM       :   音声放送LIB</li>
+<li>PROGRAM      :   放送を行うライブラリ</li>
+<li>MODULE       :   sound_lib.c  </li>
+<li>REMARKS      :</li>
+<li>HISTORY      :</li>
+<li>ID—————-DATE————NAME—————NOTE ————————————————</li>
+<li>[V01.00.00]  2015.2.2   晏       初期作成</li>
+<li>[V01.00.01]  2015.2.6   晏<br><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>*</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong>/</li>
+</ul>
+<h1 id="include_">include <fcntl.h></fcntl.h></h1>
+<h1 id="include_-1">include <stdio.h></stdio.h></h1>
+<h1 id="include_-1">include <stdlib.h></stdlib.h></h1>
+<h1 id="include_-1">include <string.h></string.h></h1>
+<h1 id="include_-1">include <sys ioctl.h=""></sys></h1>
+<h1 id="include_-1">include <unistd.h></unistd.h></h1>
+<h1 id="include_-1">include <linux soundcard.h=""></linux></h1>
+<h1 id="include_“sound_lib-h”">include “sound_lib.h”</h1>
+<p>//#define HEADER_BUFSIZE        36                                                //ヘッダファイルのバッファサイズ</p>
+<h1 id="define_BUFSIZE_64000_//ファイル読み込む用バッファサイズ">define BUFSIZE                64000                                            //ファイル読み込む用バッファサイズ</h1>
+<h1 id="define_ERR_MSG_SIZE_64">define ERR_MSG_SIZE        64</h1>
+<p>//#define FILENAME_SIZE        32                                                //ファイル名バッファサイズ</p>
+<h1 id="define_DSP_DEVICE_“/dev/dsp”_//音声再生用デバイス">define DSP_DEVICE            “/dev/dsp”                                        //音声再生用デバイス</h1>
+<p>//WAVファイルのヘッダ<br>typedef struct<br>{<br>char    chunk_id[4];                                                    //識別子”RIFF”<br>int        chunk_size;                                                        //ファイルのサイズ(識別子”RIFF”と自分を除く)<br>char     format[4];                                                        //フォーマット部(“WAVE”)<br>char     sub_chunk_id[4];                                                //識別子”fmt “<br>int      sub_chunk_size;                                                    //この後のファイルのサイズ<br>short     audio_format;                                                    //音声のフォーマット(1:PCM 　1以外は他の圧縮ファイル)<br>short     num_channels;                                                    //チャンネル<br>int     sample_rate;                                                    //サンプリング周波数<br>int     byte_rate;                                                        //1秒に使用するバイト数<br>short     block_align;                                                    //ブロックのアラインメント(今使っていない)<br>short     bits_per_sample;                                                //量子化のビット数<br>}wave_file_header_info;</p>
+<p>//WAVファイルのインフォーメーション<br>typedef struct<br>{<br>unsigned int play_start_pos;                                            //データ開始位置<br>unsigned int play_pos;                                                    //停止場所(保留　今使っていない)<br>FILE     *fp;                                                            //音声ファイル識別子<br>char     play_filename[FILENAME_SIZE];                                    //音声ファイル名<br>int     stop;                                                            //中止状態(保留　今使っていない)<br>int     refresh_times;                                                    //再生回数<br>wave_file_header_info wave_header;                                        //WAVファイルヘッダ<br>int     data_size;                                                         //データ部のサイズ<br>}play_wave_info;</p>
+<p>static const char err_msg[][ERR_MSG_SIZE] = {<br>[ERR_ZERO]                     = “エラー無し。”,<br>[ERR_FILE_OPEN]             = “ファイルopen失敗しました。”,<br>[ERR_FILE_READ]             = “ファイルの読み込みは失敗しました。”,<br>[ERR_FILE_WRITE]             = “”,<br>[ERR_DEVICE_OPEN]             = “デバイスopen失敗しました。”,<br>[ERR_DEVICE_READ]             = “”,<br>[ERR_DEVICE_WRITE]             = “DSPデバイスに書き込むことが失敗しました。”,<br>[ERR_DEVICE_SET]             = “DSPデバイス設定失敗しました。”,<br>[ERR_DEVICE_DESCRIPTOR]        = “ファイル識別子異常”,<br>[ERR_BROADCAST]             = “放送失敗しました。”,<br>[ERR_SIZE]                     = “ファイルサイズはヘッダサイズより小さい。”,<br>[ERR_NOT_RIFF]                 = “Specified file is not RIFF file.\n”,<br>[ERR_NOT_WAVE]                 = “Specified file is not WAVE file.\n”,<br>[ERR_NOT_FIND_FMT_CHUNK]     = “Failed to find fmt chunk.\n”,<br>[ERR_NOT_FIND_DATA_CHUNK]     = “Failed to find data chunk.\n”,<br>[ERR_NOT_FIND_DATA]         = “Failed to find offset of PCM data.\n”,<br>[ERR_NOT_PCM]                 = “Specified file’s sound data is not PCM format.\n”,<br>[ERR_BITS_PER_SAMPLE]         = “Specified file’s sound data is %d bits, not 8 nor 16 bits.\n”,<br>[ERR_SET_FMT]                 = “ioctl( SOUND_PCM_SETFMT )”,<br>[ERR_WRITE_RATE]             = “ioctl( SOUND_PCM_WRITE_RATE )”,<br>[ERR_WRITE_CHANNEL]         = “ioctl( SOUND_PCM_WRITE_CHANNELS )”<br>};</p>
+<p>static void wave_init(const char <em>filename, play_wave_info </em>wave_info, int refresh_count);        //WAVファイルインフォーメーション初期化<br>static int wave_read_file_header(play_wave_info <em>wave_info);                                    //WAVファイルヘッダを読み込む<br>static int set_dsp(int </em>dsp, play_wave_info <em>wave_info);                                        //DSPデバイスを設定<br>static int dsp_play(int </em>dsp, int <em>stop_cmd, play_wave_info </em>wave_info);                        //放送</p>
+<p>/<em>SOH<strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><em>**</em></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></em></p>
+<ul>
+<li>NAME         : open_voice_device</li>
+<li>FUNCTION     : デバイスを開く</li>
+<li>VERSION      : 01.00.00</li>
+<li>IN/OUT       : (i/o) dsp: 音声放送デバイスの識別子</li>
+<li>RETURN       : 0:OK &gt;0:NG　</li>
+<li>REMARKS      : 備考</li>
+<li>HISTORY      :</li>
+<li>ID—————-DATE————NAME—————NOTE ————————————————</li>
+<li>[V01.00.00]  2015.02.06  晏<br><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>*</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong>EOH<em>/<br>int open_voice_device(int </em>dsp)<br>{<br>if ( -1 == ( *dsp = open( DSP<em>DEVICE, O<em>WRONLY ) ) )<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s:%s。”,  <strong>FILE</strong>, <strong>LINE</strong>, __FUNCTION</em></em>, err_msg[ERR_DEVICE_OPEN], DSP_DEVICE);<br>return ERR_DEVICE_OPEN;<br>}<br>return ERR_ZERO;<br>}</li>
+</ul>
+<p>/<em>SOH<strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><em>**</em></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></em></p>
+<ul>
+<li>NAME         : close_voice_device</li>
+<li>FUNCTION     : デバイスをクロス</li>
+<li>VERSION      : 01.00.00</li>
+<li>IN/OUT       : (i/o) dsp: 音声放送デバイスの識別子</li>
+<li>RETURN       : 0:OK &gt;0:NG　</li>
+<li>REMARKS      : 備考</li>
+<li>HISTORY      :</li>
+<li>ID—————-DATE————NAME—————NOTE ————————————————</li>
+<li>[V01.00.00]  2015.02.06  晏<br><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>*</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong>EOH<em>/<br>int close_voice_device(int </em>dsp)<br>{<br>if (*dsp &lt;= 0)<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s:%s。”,  <strong>FILE</strong>, <strong>LINE</strong>, <strong>FUNCTION</strong>, err_msg[ERR_DEVICE_DESCRIPTOR], DSP_DEVICE);<br>return ERR_DEVICE_DESCRIPTOR;<br>}</li>
+</ul>
+<p>close(*dsp);</p>
+<p>return ERR_ZERO;<br>}</p>
+<p>/<em>SOH<strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><em>**</em></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></em></p>
+<ul>
+<li>NAME         : start_play_wave</li>
+<li>FUNCTION     : WAVファイル放送インターフェス</li>
+<li>VERSION      : 01.00.00</li>
+<li>IN/OUT       : (i/ ) dsp                : 音声放送デバイスの識別子</li>
+<li>: (i/ ) filename        : 音声ファイル名</li>
+<li>: (i/ ) refresh_times     : 再生回数</li>
+<li>: (i/ ) play_status        : 再生状態</li>
+<li>RETURN       : 0:OK &gt;0:NG　</li>
+<li>REMARKS      : 備考</li>
+<li>HISTORY      :</li>
+<li>ID—————-DATE————NAME—————NOTE ————————————————</li>
+<li>[V01.00.00]  2015.02.02  晏         </li>
+<li>[V01.00.01]  2015.02.06  晏<br><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>*</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong>EOH*/</li>
+</ul>
+<p>int start_play_wave(int <em>dsp, const char </em>filename, int refresh_times, play_stat *play_status)<br>{</p>
+<p>//    int dsp = 0;                        //DSPデバイスの識別子</p>
+<p>play_wave_info wave_info;            //音声ファイルインフォーメーション</p>
+<p>wave_init(filename, &amp;wave_info, refresh_times);                    //音声ファイルインフォーメーションを初期化する</p>
+<p>//音声ファイルを開く<br>if( (wave<em>info.fp = fopen(filename, “r”)) == NULL )<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s:%s\n”, <strong>FILE</strong>, <strong>LINE</strong>, <em>_FUNCTION</em></em>, err_msg[ERR_FILE_OPEN], filename);<br>return (int)ERR_FILE_OPEN;<br>}</p>
+<p>//音声ファイルのヘッダを読み込む、チェック処理を行う<br>if ( ERR_ZERO != wave_read_file_header(&amp;wave_info) )<br>{<br>fclose(wave_info.fp);<br>return -1;<br>}</p>
+<h1 id="if_0_//もう一つ関数に移動">if 0        //もう一つ関数に移動</h1>
+<p>//DSPデバイスを開く<br>if ( -1 == ( dsp = open( DSP<em>DEVICE, O<em>WRONLY ) ) )<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s:%s。”,  <strong>FILE</strong>, <strong>LINE</strong>, __FUNCTION</em></em>, err_msg[ERR_DEVICE_OPEN], DSP_DEVICE);<br>fclose(wave_info.fp);<br>return ERR_DEVICE_OPEN;<br>}</p>
+<h1 id="endif">endif</h1>
+<p>//音声ファイルヘッダデータにより、DSPデバイスを設定する<br>if ( ERR<em>ZERO != set<em>dsp(dsp, &amp;wave<em>info) )<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <strong>FILE</strong>, <em>_LINE</em></em>, __FUNCTION</em></em>, err_msg[ERR_DEVICE_SET]);<br>//        close(dsp);<br>fclose(wave_info.fp);<br>return ERR_DEVICE_SET;<br>}</p>
+<p>//放送を行う<br>if ( ERR<em>ZERO != dsp<em>play(dsp, &amp;play<em>status-&gt;stop<em>cmd, &amp;wave<em>info) )<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <em>_FILE</em></em>, __LINE</em></em>, __FUNCTION</em></em>, err_msg[ERR_BROADCAST]);<br>//        close(dsp);<br>fclose(wave_info.fp);<br>return ERR_BROADCAST;<br>}</p>
+<p>//    close(dsp);<br>fclose(wave_info.fp);</p>
+<p>return ERR_ZERO;<br>}</p>
+<p>/<em>SOH<strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><em>**</em></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></em></p>
+<ul>
+<li>NAME         : stop_play_wave</li>
+<li>FUNCTION     : WAVファイル放送ストップインターフェス</li>
+<li>VERSION      : 01.00.00</li>
+<li>IN/OUT       : </li>
+<li>RETURN       : 0:OK &gt;0:NG　</li>
+<li>REMARKS      : 備考</li>
+<li>HISTORY      :</li>
+<li>ID—————-DATE————NAME—————NOTE ————————————————</li>
+<li>[V01.00.00]  2015.02.06  晏<br><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>*</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong>EOH<em>/<br>void stop_play_wave(play_stat </em>play<em>status)<br>{<br>if (IS<em>RUNNING == play<em>status-&gt;status)<br>{<br>play<em>status-&gt;stop<em>cmd = STOP<em>PLAY;                    //放送をストップフラグを設定する<br>}<br>else<br>{<br>fprintf(stderr, “[%s:%d:%s()]音声を再生していません。”,  __FILE</em></em>, __LINE</em></em>, __FUNCTION</em></em>);<br>}<br>}                                                        </li>
+</ul>
+<p>/<em>SOH<strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><em>**</em></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></em></p>
+<ul>
+<li>NAME         : wave_init</li>
+<li>FUNCTION     : 音声ファイルインフォーメーションを初期化する</li>
+<li>VERSION      : 01.00.00</li>
+<li>IN/OUT       : (i/ ) filename: ファイル名</li>
+<li>: (i/o) wave_info : 音声ファイルインフォーメーション<br>: (i/ )refresh_count:再生回数</li>
+<li>RETURN       : 0:OK &gt;0:NG　</li>
+<li>REMARKS      : 備考</li>
+<li>HISTORY      :</li>
+<li>ID—————-DATE————NAME—————NOTE ————————————————</li>
+<li>[V01.00.00]  2015.02.02  晏<br><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>*</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong>EOH*/</li>
+</ul>
+<p>static void wave_init(const char <em>filename, play_wave_info </em>wave_info, int refresh_count)<br>{<br>wave_info-&gt;play_start_pos = 0;<br>wave_info-&gt;play_pos = 0;<br>wave_info-&gt;stop = 0;<br>wave_info-&gt;data_size = 0;<br>wave_info-&gt;refresh_times = refresh_count;<br>strncpy(wave_info-&gt;play_filename, filename, FILENAME_SIZE);<br>memset(&amp;wave_info-&gt;wave_header, 0x00, sizeof(wave_file_header_info));<br>}</p>
+<p>/<em>SOH<strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><em>**</em></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></em></p>
+<ul>
+<li>NAME         : wave_read_file_header</li>
+<li>FUNCTION     : 音声ファイルヘッダデータを読み込んで、チェックします</li>
+<li>VERSION      : 01.00.00</li>
+<li>IN/OUT       : (i/o) wave_info: 音声ファイルインフォーメーション　　</li>
+<li>RETURN       : 0:OK &gt;0:NG　</li>
+<li>REMARKS      : 備考</li>
+<li>HISTORY      :</li>
+<li>ID—————-DATE————NAME—————NOTE ————————————————</li>
+<li>[V01.00.00]  2015.02.02  晏<br><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>*</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong>EOH*/</li>
+</ul>
+<p>static int wave_read_file_header(play_wave_info *wave_info)<br>{<br>int len = 0;                            //臨時変数　サイズ<br>char buf[BUFSIZE];                        //臨時バッファ</p>
+<p>memset(buf, 0x00, BUFSIZE);                //臨時バッファを初期化する</p>
+<p>//ファイルヘッダをバッファに読み込む<br>//fread( buf, 1, HEADER_BUFSIZE, wave_info-&gt;fp );</p>
+<p>//バッファからファイルヘッダを構造体にコピーする<br>//memcpy(&amp;wave_info-&gt;wave_header, buf, HEADER_BUFSIZE);</p>
+<p>//ファイルヘッダをバッファに読み込む<br>len = fread( &amp;wave_info-&gt;wave_header, 1, sizeof(wave_file_header_info), wave_info-&gt;fp );</p>
+<p>if (len &lt; sizeof(wave<em>file<em>header<em>info))<br>{<br>if (feof(wave<em>info-&gt;fp))<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <strong>FILE</strong>, <strong>LINE</strong>, <strong>FUNCTION</strong>, err<em>msg[ERR<em>SIZE]);<br>return ERR<em>SIZE;<br>}<br>else<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <strong>FILE</strong>, <strong>LINE</strong>, <em>_FUNCTION</em></em>, err_msg[ERR_FILE_READ]);<br>return ERR_FILE_READ;<br>}<br>}<br>/<em>チェック処理を行う</em>/<br>//“RIFF”識別子をチェックする<br>if ( strncmp( wave_info-&gt;wave_header.chunk_id, “RIFF”, 4 ) != 0 )<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  __FILE</em></em>, __LINE</em></em>, __FUNCTION</em></em>, err_msg[ERR_NOT_RIFF] );<br>return ERR_NOT_RIFF;<br>}</p>
+<p>//フォーマット”WAVE”をチェックする<br>if ( strncmp( wave<em>info-&gt;wave<em>header.format, “WAVE”, 4 ) != 0 ) {<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <strong>FILE</strong>, <strong>LINE</strong>, __FUNCTION</em></em>, err_msg[ERR_NOT_WAVE] );<br>return ERR_NOT_WAVE;<br>}</p>
+<p>//“fmt”識別子をチェックする<br>if ( strncmp(wave<em>info-&gt;wave<em>header.sub<em>chunk<em>id, “fmt “, 4) != 0)<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <strong>FILE</strong>, __LINE</em></em>, __FUNCTION</em></em>, err_msg[ERR_NOT_FIND_FMT_CHUNK] );<br>return ERR_NOT_FIND_FMT_CHUNK;<br>}</p>
+<p>//無限ループでデータ部を探す<br>while ( 1 ) {<br>len = fread( buf, 8, 1, wave<em>info-&gt;fp );                                //識別子とサイズを読み込む<br>if (len &lt; 1)<br>{<br>if (feof(wave<em>info-&gt;fp))<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <strong>FILE</strong>, <strong>LINE</strong>, <strong>FUNCTION</strong>, err<em>msg[ERR<em>SIZE]);<br>return ERR<em>SIZE;<br>}<br>else<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <em>_FILE</em></em>, __LINE</em></em>, __FUNCTION</em></em>, err_msg[ERR_FILE_READ]);<br>return ERR_FILE_READ;<br>}<br>}</p>
+<p>len = <em>( int</em> )( &amp;buf[4] );                                        //サイズをlenに保存する</p>
+<p>//“data”識別子をチェックする、”data”でなければ、lenバイト内容を飛ばして、次のエリアをチェックする<br>if ( strncmp( buf, “data”, 4 ) != 0 )<br>{<br>//位置lenバイト後を設定し、”data”を探し続く<br>if ( fseek( wave<em>info-&gt;fp, len, SEEK<em>CUR ) == -1 )<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <strong>FILE</strong>, <strong>LINE</strong>, __FUNCTION</em></em>, err_msg[ERR_NOT_FIND_DATA_CHUNK] );<br>return ERR_NOT_FIND_DATA_CHUNK;<br>}<br>}<br>else<br>{<br>break;<br>}<br>}</p>
+<p>//データ部サイズを設定する<br>wave_info-&gt;data_size = len;</p>
+<p>//データの開始位置を保存しながら、チェックします<br>if ( ( wave<em>info-&gt;play<em>start<em>pos = ftell( wave<em>info-&gt;fp ) ) == -1 )<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <strong>FILE</strong>, __LINE</em></em>, __FUNCTION</em></em>, err_msg[ERR_NOT_FIND_DATA] );<br>return ERR_NOT_FIND_DATA;<br>}</p>
+<p>return ERR_ZERO;<br>}</p>
+<p>/<em>SOH<strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><em>**</em></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></em></p>
+<ul>
+<li>NAME         : set_dsp　　</li>
+<li>FUNCTION     : DSPデバイスを設定する</li>
+<li>VERSION      : 01.00.00</li>
+<li>IN/OUT       : (i/ ) dsp: DSPデバイスの識別子</li>
+<li>: (i/ ) wave_info : 音声ファイルインフォーメーション</li>
+<li>RETURN       : 0:OK &gt;0:NG　</li>
+<li>REMARKS      : 備考</li>
+<li>HISTORY      :</li>
+<li>ID—————-DATE————NAME—————NOTE ————————————————</li>
+<li>[V01.00.00]  2015.02.02  晏<br><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>*</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong>EOH*/</li>
+</ul>
+<p>static int set_dsp(int <em>dsp, play_wave_info </em>wave_info)<br>{<br>int format = 0;                    //フォーマットの初期化<br>int backup_fmt = 0;                //フォーマットのバックアップ<br>int rate = 0;                    //サンプリング周波数<br>int backup_rate = 0;            //サンプリング周波数のバックアップ</p>
+<p>//メディアフォーマットは”1”でなければ、PCMフォーマットではないと判断します。(この状態は別の圧縮ファイルになってしまう)<br>if ( 1 != wave<em>info-&gt;wave<em>header.audio<em>format)<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <strong>FILE</strong>, <em>_LINE</em></em>, __FUNCTION</em></em>, err_msg[ERR_NOT_PCM] );<br>//fclose( wave_info-&gt;fp );<br>return ERR_NOT_PCM;<br>}</p>
+<p>//量子化ビット数をチェックする<br>//8bitの場合：フォーマットに”AFMT_U8”を設定する　　<br>if ( wave_info-&gt;wave_header.bits_per_sample == 8 )<br>{<br>format = AFMT_U8;<br>backup_fmt = format;<br>}</p>
+<p>//16bitの場合：フォーマットに”AFMT_S16_LE”を設定する<br>else if ( wave_info-&gt;wave_header.bits_per_sample == 16 )<br>{<br>format = AFMT_S16_LE;<br>backup_fmt = format;<br>}</p>
+<p>//その以外の場合、エラーとします<br>else<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <strong>FILE</strong>, <strong>LINE</strong>, <strong>FUNCTION</strong>, err_msg[ERR_BITS_PER_SAMPLE], wave_info-&gt;wave_header.bits_per_sample );<br>//fclose( wave_info-&gt;fp );<br>return ERR_BITS_PER_SAMPLE;<br>}</p>
+<p>int channel = ( int )wave_info-&gt;wave_header.num_channels;                    //チャンネルを設定する</p>
+<p>rate = wave_info-&gt;wave_header.sample_rate;<br>backup_rate = rate;</p>
+<p>//デバイスのフォーマットを設定する<br>if ( (ioctl( *dsp, SNDCTL<em>DSP<em>SETFMT, &amp;format ) == -1) || (backup<em>fmt != format) )<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <strong>FILE</strong>, <em>_LINE</em></em>, __FUNCTION</em></em>, err_msg[ERR_SET_FMT] );<br>return ERR_SET_FMT;<br>}</p>
+<p>//デバイスのサンプリングの周波数を設定<br>if ( (ioctl( *dsp, SOUND<em>PCM<em>WRITE<em>RATE, &amp;wave<em>info-&gt;wave<em>header.sample<em>rate ) == -1 ) || (backup_rate != rate) )<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  __FILE</em></em>, __LINE</em></em>, __FUNCTION</em></em>, err_msg[ERR_WRITE_RATE] );<br>return ERR_WRITE_RATE;<br>}</p>
+<p>//デバイスのチャンネルを設定する<br>if ( ioctl( *dsp, SOUND<em>PCM<em>WRITE<em>CHANNELS, &amp;channel ) == -1 )<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <strong>FILE</strong>, <em>_LINE</em></em>, __FUNCTION</em></em>, err_msg[ERR_WRITE_CHANNEL] );<br>return ERR_WRITE_CHANNEL;<br>}</p>
+<p>return ERR_ZERO ;<br>}</p>
+<p>/<em>SOH<strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><em>**</em></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></em></p>
+<ul>
+<li>NAME         : dsp_play　　</li>
+<li>FUNCTION     : 音声を放送する</li>
+<li>VERSION      : 01.00.00</li>
+<li>IN/OUT       : (i/ ) dsp            : DSPデバイスの識別子</li>
+<li>: (i/ ) stop_cmd    : 再生を中止する識別子</li>
+<li>: (i/ ) wave_info     : 音声ファイルインフォーメーション</li>
+<li>RETURN       : 0:OK &gt;0:NG　</li>
+<li>REMARKS      : 備考</li>
+<li>HISTORY      :</li>
+<li>ID—————-DATE————NAME—————NOTE ————————————————</li>
+<li>[V01.00.00]  2015.02.02  晏         </li>
+<li>[V01.00.01]  2015.02.06  晏<br><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>*</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong>EOH*/</li>
+</ul>
+<p>static int dsp_play(int <em>dsp, int </em>stop_cmd, play_wave_info *wave_info)<br>{<br>int len;                                //臨時変数サイズ<br>char buf[BUFSIZE];                        //臨時バッファ(ファイル読み込むとデバイスに書き込む用)<br>int rebroadcast_cnt = 0;                //再生回数<br>int ret = ERR_ZERO;                        //リータン値</p>
+<p>printf( “Now playing specified wave file %s …\n”, wave_info-&gt;play_filename );<br>fflush( stdout );</p>
+<p>//データの開始場所に設定する<br>fseek( wave_info-&gt;fp, wave_info-&gt;play_start_pos, SEEK_SET );</p>
+<p>//ループで再生する<br>while ( 1 ) {</p>
+<p>if ( STOP<em>PLAY == *stop<em>cmd )<br>{<br>fprintf(stderr, “[%s:%d:%s()]中止指示があるため、中止する。”,  <strong>FILE</strong>, <strong>LINE</strong>, __FUNCTION</em></em>);<br>break;<br>}</p>
+<p>len = fread( buf, 1, BUFSIZE, wave_info-&gt;fp );</p>
+<p>//ファイルを再生完了場合や読み込み失敗の場合<br>if ( len &lt; BUFSIZE )<br>{<br>//ファイルを再生完了のチェック<br>if ( feof( wave<em>info-&gt;fp ) )<br>{<br>//書込み失敗<br>if ( -1 == write( *dsp, buf, len ) )<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <strong>FILE</strong>, <strong>LINE</strong>, <strong>FUNCTION</strong>, err<em>msg[ERR<em>DEVICE<em>WRITE] );<br>ret = ERR<em>DEVICE<em>WRITE;<br>}<br>//正常の場合、再生回数により、終了するかもう一度再生するかを決める<br>else<br>{<br>if ( (++rebroadcast_cnt) &lt; wave_info-&gt;refresh_times)<br>{<br>fseek( wave_info-&gt;fp, wave_info-&gt;play_start_pos, SEEK_SET );<br>continue;<br>}<br>}<br>}<br>else<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  __FILE</em></em>, __LINE</em></em>, __FUNCTION</em></em>, err_msg[ERR_BROADCAST] );<br>ret = ERR_BROADCAST;<br>}</p>
+<p>break;<br>}</p>
+<p>if ( -1 == write( *dsp, buf, len ) )<br>{<br>fprintf(stderr, “[%s:%d:%s()]%s。”,  <strong>FILE</strong>, <strong>LINE</strong>, <strong>FUNCTION</strong>, err_msg[ERR_DEVICE_WRITE] );<br>ret = ERR_DEVICE_WRITE;<br>break;<br>}</p>
+<p>}</p>
+<p>return ret;<br>}</p>
+<p>‘’’</p>
+<pre><code>ⅱ.<span class="filename">sound_lib.h</span>:
+</code></pre><p>‘’’</p>
+<h1 id="ifndef_SOUND_LIB">ifndef SOUND_LIB</h1>
+<h1 id="define_SOUND_LIB">define SOUND_LIB</h1>
+<h1 id="define_DEFAULT_PLAY_TIMES_1">define DEFAULT_PLAY_TIMES 1</h1>
+<p>//#define play_wave_default(filename) play_wave(filename, DEFAULT_PLAY_TIMES)        </p>
+<h1 id="define_FILENAME_SIZE_32">define FILENAME_SIZE        32</h1>
+<h1 id="define_STOP_PLAY_1">define STOP_PLAY            1</h1>
+<h1 id="define_IS_RUNNING_1">define IS_RUNNING            1</h1>
+<p>enum ERROR_CODE<br>{<br>ERR_ZERO,<br>ERR_FILE_OPEN,<br>ERR_FILE_READ,<br>ERR_FILE_WRITE,<br>ERR_DEVICE_OPEN,<br>ERR_DEVICE_READ,<br>ERR_DEVICE_WRITE,<br>ERR_DEVICE_SET,<br>ERR_DEVICE_DESCRIPTOR,<br>ERR_BROADCAST,<br>ERR_SIZE,<br>ERR_NOT_RIFF,<br>ERR_NOT_WAVE,<br>ERR_NOT_FIND_FMT_CHUNK,<br>ERR_NOT_FIND_DATA_CHUNK,<br>ERR_NOT_FIND_DATA,<br>ERR_NOT_PCM,<br>ERR_BITS_PER_SAMPLE,<br>ERR_SET_FMT,<br>ERR_WRITE_RATE,<br>ERR_WRITE_CHANNEL<br>};</p>
+<p>typedef struct<br>{<br>int stop_cmd;<br>int status;<br>}play_stat;</p>
+<p>extern int start_play_wave(int <em>dsp,<br>const char </em>filename,<br>int refresh_times,<br>play_stat <em>play_status);<br>extern void stop_play_wave(play_stat </em>play_status);<br>extern int open_voice_device(int <em>dsp);<br>extern int close_voice_device(int </em>dsp);                                            </p>
+<h1 id="endif-1">endif</h1>
+<p>‘’’</p>
+<pre><code>ⅲ.sound_test.<span class="built_in">c</span>
+</code></pre><p>‘’’<br>/<strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>**</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></p>
+<ul>
+<li>SYSTEM       :   音声放送LIB テスト</li>
+<li>PROGRAM      :   放送を行うライブラリ</li>
+<li>MODULE       :   sound_test.c  ※ｿｰｽﾌｧｲﾙ名</li>
+<li>REMARKS      :</li>
+<li>HISTORY      :</li>
+<li>ID—————-DATE————NAME—————NOTE ————————————————</li>
+<li>[V01.00.00]  2015.02.02   晏       初期作成</li>
+<li>[V01.00.01]  2015.02.06  晏<br><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>*</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong>/</li>
+</ul>
+<p>/<strong><strong>**</strong></strong>INCLUDE AREA<strong><strong><em>*</em></strong></strong>/</p>
+<h1 id="include_-1">include <stdio.h></stdio.h></h1>
+<h1 id="include_-1">include <unistd.h></unistd.h></h1>
+<h1 id="include_“sound_lib-h”-1">include “sound_lib.h”</h1>
+<p>/<em>SOH<strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><em>**</em></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></em></p>
+<ul>
+<li>NAME         : main</li>
+<li>FUNCTION     : 単体テスト</li>
+<li>VERSION      : 01.00.00</li>
+<li>IN/OUT       : (i/ ) argc: パラメータ</li>
+<li>: (i/ ) argv : パラメータ配列</li>
+<li>RETURN       : 0:OK &lt;0:NG　※　リターン値の説明</li>
+<li>REMARKS      : 備考</li>
+<li>HISTORY      :</li>
+<li>ID—————-DATE————NAME—————NOTE ————————————————</li>
+<li>[V01.00.00]  2015.02.02  晏         </li>
+<li>[V01.00.01]  2015.02.06  晏<br><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>*</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong>EOH*/</li>
+</ul>
+<p>int main(int argc, char *argv[])<br>{<br>//再生回数の格納先<br>int refresh_times = 0;</p>
+<p>printf(“再生回数を入力してください:\n”);</p>
+<p>scanf(“%d”, &amp;refresh_times);</p>
+<p>printf(“再生回数は%d回\n”, refresh_times);<br>/<em><br>//デフォールト再生回数を使う関数のテスト<br>if (DEFAULT_PLAY_TIMES == refresh_times)<br>{<br>if ( -1 == play_wave_default(argv[1]))<br>{<br>return -1;<br>}<br>}<br>//普通の関数のテスト<br>else<br>{<br>if ( -1 == play_wave(argv[1], refresh_times))<br>{<br>return -1;<br>}<br>}
+</em>/<br>int dsp;</p>
+<p>open_voice_device(&amp;dsp);</p>
+<p>if ( ERR_ZERO != play_wave(argv[1], refresh_times))<br>{<br>return -1;<br>}</p>
+<p>printf(“音声ファイル再生：OVER!\n”);</p>
+<p>close_voice_device(&amp;dsp);</p>
+<p>return 0;<br>}</p>
+<p>‘’’</p>
+<p>以上の例は簡単で作ったものなので、よくないかもしれないが、中身をみて、OSSはどういう風に使えるかがわかるはずだ。</p>
 
 	
 	</div>
@@ -584,21 +831,11 @@ Github Pagesのリポジトリ
 		<ul class="tag_box inline list-unstyled">		
 		
 		    
-		
-		    
-		
-		    
+			    <li><a href="/tags/linux/">linux<span>1</span></a></li>
+			
 		
 		    
 			    <li><a href="/tags/工具安装/">工具安装<span>1</span></a></li>
-			
-		
-		    
-			    <li><a href="/tags/挨拶/">挨拶<span>1</span></a></li>
-			
-		
-		    
-			    <li><a href="/tags/linux/">linux<span>1</span></a></li>
 			
 		
 		    
@@ -606,8 +843,18 @@ Github Pagesのリポジトリ
 			
 		
 		    
+		
+		    
 			    <li><a href="/tags/C/">C++<span>1</span></a></li>
 			
+		
+		    
+			    <li><a href="/tags/挨拶/">挨拶<span>1</span></a></li>
+			
+		
+		    
+		
+		    
 		
 		 
 		</ul>
@@ -621,7 +868,7 @@ Github Pagesのリポジトリ
   <ul class="entry list-unstyled">
     
       <li>
-        <a href="/2015/02/20/alsa-1/" ><i class="fa fa-file-o"></i>alsaの勉強（1）__OSS</a>
+        <a href="/2015/02/20/alsa-1/" ><i class="fa fa-file-o"></i>alsaの勉強（1）ーー OSS</a>
       </li>
     
       <li>
