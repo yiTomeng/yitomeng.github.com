@@ -91,6 +91,36 @@
 	
 	<!-- display as entry -->
 		<h3 class="title">
+			<a href="/2015/02/20/alsa-1/" >alsaの勉強（1）__OSS</a>
+			<span class="date"> Feb 20 2015 </span>
+		</h3>
+	
+
+
+			<div class="entry">
+  <div class="row">
+  
+	<div class="col-md-12">
+	  
+	
+	  <pre><code>最近linux上の音声再生方法を集中しているけど、未だによくわからないですけど、とりあえずメモしておく。
+
+最初の時、linux上の音声再生方法を調べたところ、OSSというものがある。OSSは「<span class="keyword">Open</span> <span class="keyword">Sound</span> System」の略称である。
+</code></pre><p>この方法はlinuxのシステムコールを呼び出す必要だ。その他、デバイス名も必要になる。OSSに関するデバイス名は/dev/dspとか、<br>/dev/mixerなどたくさんある。他のファイル（/dev/sndや/dev/audioなど）も音声と関わっている。一番重要なのは/dev/dsp<br>と/dev/mixerだと思う。まずこの2つデバイスを簡単に説明しましょう。<br>    /dev/dspは放送・録音用のデバイスである。<br>    OSSを使うと、システムコールopen()、close()、ioctl()、read()、write()が必要だ。普通にはopen()→ioctl()→close()のように音声<br>ファイルを再生する。open（）とclose()はファイル操作と同じように使ったら特に問題ないだが、音声放送に対して一番重要なのはデバイスの設定だと思う。<br>どういうふうに設定すればいいのか？何か設定必要なのか？</p>
+
+	
+	</div>
+	
+  
+</div>
+	<a type="button" href="/2015/02/20/alsa-1/#more" class="btn btn-default more">Read More</a>
+</div>
+
+		
+			
+	
+	<!-- display as entry -->
+		<h3 class="title">
 			<a href="/2015/02/02/function-default-c/" >C语言中默认参数的实现及相关define</a>
 			<span class="date"> Feb 2 2015 </span>
 		</h3>
@@ -556,23 +586,27 @@ Github Pagesのリポジトリ
 		    
 		
 		    
+		
+		    
+		
+		    
 			    <li><a href="/tags/工具安装/">工具安装<span>1</span></a></li>
 			
-		
-		    
-		
-		    
-			    <li><a href="/tags/C/">C++<span>1</span></a></li>
-			
-		
-		    
 		
 		    
 			    <li><a href="/tags/挨拶/">挨拶<span>1</span></a></li>
 			
 		
 		    
+			    <li><a href="/tags/linux/">linux<span>1</span></a></li>
+			
+		
+		    
 			    <li><a href="/tags/C/">C<span>2</span></a></li>
+			
+		
+		    
+			    <li><a href="/tags/C/">C++<span>1</span></a></li>
 			
 		
 		 
@@ -585,6 +619,10 @@ Github Pagesのリポジトリ
 <div class="widget">
   <h4>Recent Posts</h4>
   <ul class="entry list-unstyled">
+    
+      <li>
+        <a href="/2015/02/20/alsa-1/" ><i class="fa fa-file-o"></i>alsaの勉強（1）__OSS</a>
+      </li>
     
       <li>
         <a href="/2015/02/02/function-default-c/" ><i class="fa fa-file-o"></i>C语言中默认参数的实现及相关define</a>
@@ -600,10 +638,6 @@ Github Pagesのリポジトリ
     
       <li>
         <a href="/2015/01/27/hexoInstall/" ><i class="fa fa-file-o"></i>hexo Install</a>
-      </li>
-    
-      <li>
-        <a href="/2015/01/27/toZM/" ><i class="fa fa-file-o"></i>toZM</a>
       </li>
     
   </ul>
