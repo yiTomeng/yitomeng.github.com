@@ -1,0 +1,240 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>ulimitの説明　と　セグメンテーション違反 | Yly&#39;s Blog</title>
+  <meta name="author" content="Yly">
+  
+  <meta name="description" content="はじめに
+linux Cを開発する時、セグメンテーション違反はよく見えるよね（すげーSE者とPG者を除外）。その時は解決しないといけないだろう。その原因はいつもポインタのせいだと思う。
+一、ulimitにおいて簡単な説明
+でも、環境の問題があるという言い方も存在する(ネットで調べた結果）。例えば、ロ">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="ulimitの説明　と　セグメンテーション違反"/>
+  <meta property="og:site_name" content="Yly&#39;s Blog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  
+  
+    <link href="/favicon.png" rel="icon">
+  
+  
+  <link rel="stylesheet" href="/css/bootstrap.min.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/font-awesome.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/highlight.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/google-fonts.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+  <script src="/js/jquery-2.0.3.min.js"></script>
+
+  <!-- analytics -->
+  
+
+</head>
+
+ <body>  
+  <nav id="main-nav" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+      <button type="button" class="navbar-header navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+		<span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+	  <a class="navbar-brand" href="/">Yly&#39;s Blog</a>
+      <div class="collapse navbar-collapse nav-menu">
+		<ul class="nav navbar-nav">
+		  
+		  <li>
+			<a href="/archives" title="All the articles.">
+			  <i class="fa fa-archive"></i>Archives
+			</a>
+		  </li>
+		  
+		  <li>
+			<a href="/tags" title="All the tags.">
+			  <i class="fa fa-tags"></i>Tags
+			</a>
+		  </li>
+		  
+		</ul>
+      </div>
+    </div> <!-- container -->
+</nav>
+<div class="clearfix"></div>
+
+  <div class="container">
+  	<div class="content">
+    	 
+
+
+	
+		<div class="page-header">		
+			<h1> ulimitの説明　と　セグメンテーション違反</h1>
+		</div>		
+	
+
+
+
+<div class="row post">
+	<!-- cols -->
+	
+	<div class="col-md-9">
+	
+
+			
+
+	<!-- content -->
+	<div class="mypage">		
+	    <h2 id="はじめに">はじめに</h2>
+<p>linux Cを開発する時、セグメンテーション違反はよく見えるよね（すげーSE者とPG者を除外）。その時は解決しないといけないだろう。その原因はいつもポインタのせいだと思う。</p>
+<h2 id="一、ulimitにおいて簡単な説明">一、ulimitにおいて簡単な説明</h2>
+<p>でも、環境の問題があるという言い方も存在する(ネットで調べた結果）。例えば、ローカル変数で11MBを使っているが、linuxのデフォルトのスタックサイズは10MBの場合、スタックオーバーフローになってしまうのだ。どのように現在使っている環境のデフォルトスタックサイズを確認できるか？今から説明する。</p>
+<p>現在の環境を確認しようと思ったら、ulimitを使って、目的を達成できる。ulimitに関しては、以下のように使える：</p>
+<pre><code>
+-a    設定されている各種の制限を表示する
+-c    プロセスがファイルへコア・ダンプする容量を最大Nブロックに制限する
+-d    プロセスのデータ領域のサイズを最大Nキロ・バイトに制限する
+-f    出力ファイルのサイズを最大Nブロックに制限する
+-l    メモリーにロックできるサイズを最大Nキロ・バイトに制限する
+-m    メモリーの使用量を最大Nキロ・バイトに制限する
+-n    ファイル・ディスクリプタの数を最大N個に制限する
+-p    パイプのサイズを最大N×512バイトに制限する
+-s    スタック・サイズを最大Nキロ・バイトに制限する
+-t    CPU時間を最大N秒に制限する
+-u    ユーザー1人が起動できるプロセス数を最大N個に制限する
+-v    シェルが利用できる仮想メモリーを最大Nキロ・バイトに制限する
+-H    いったん設定した制限を解除できなくする
+-S    -Hで制限した最大値以内の値を設定する
+-t    コマンドの型を表示する
+</code></pre>
+
+<p>もしスタックサイズを調べてほしいなら、「ulimit -s」を入力すればいい。<br>もしスタックサイズを設定してほしい場合、「ulimit -s SIZE」を入力する（SIZEは設定したがるサイズである）<br>注意するべき点は、この設定したら、今の実行中shellしか効かない。もしシステム全体に効くように設定しようと、/etc/profileに先のコマンドを入力するべきだ。(shellで echo ulimit -s 1024を入力してもいい）。</p>
+<h2 id="二、セグメンテーション違反">二、セグメンテーション違反</h2>
+<p>セグメンテーション違反はC言語のPG者たちに対して、とても厄介なものといっても過言ではない(No1ではないね）。<br>このエラーの原因はいくつある、現在思い出せる原因を挙げましょう：<br>①スタックの領域が足りない。<br>この原因は理解しやすい。スタックが足りない場合、つまり、スタックオーバーフローになってしまう。</p>
+<p>②アプリは使えないアドレスを使おうとする。<br>例えば、</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> *p = NULL;</div><div class="line">*p = <span class="number">4</span>;</div></pre></td></tr></table></figure>
+
+<p>C言語では、NULL = (void *)0、ソースはそうなったら、アドレス０の内容を変更しようと、エラー発生する。</p>
+<p>③変更できない内容を変更しよう<br>また例を挙げましょう：</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">char</span> *p = <span class="string">"Hello core"</span>;</div><div class="line">p[<span class="number">0</span>] = <span class="string">'m'</span>;</div></pre></td></tr></table></figure>
+
+<p>上の用なソースを実行したら、定数をかえようと、セグメンテーション違反が発生する。</p>
+<h2 id="三、セグメンテーション違反のデバッグ">三、セグメンテーション違反のデバッグ</h2>
+<p>①gdbでデバッグ：<br>linuxには最初からgdbがインストールされた場合がおおいから、セグメンテーション違反が発生する場合、gdbで調査できる。<br>例えば、a.out実行するとエラーが発生する場合、[gdb a.out]を入力し、gdbでデバッグを開始させる。それで、「run」を実行すると、実行ファイルが動いている。セグメンテーション違反発生時、デバッグは一旦停止し、どこで止まっているのかが出力された。そうすると、どこが問題なのかをわかっているかもしれない。</p>
+<p>gdbでデバッグはcoreファイルを使って、デバッグもできる。普通にはセグメンテーション違反の場合、core dumpファイルが作成される。（windows アプリと似ている。ウィンドウズでは、デバッグ時、mapファイルとsymbolファイルを事前に作成し、アプリが落ちる場合、dumpファイルも作成される。自動的作成されることがあるかもしれない、もし作成されていない場合、落ちる画面を閉じないままで、タスク管理でアプリの項目を右クリックして、ダンプファイルを作成を選択し、ダンプファイルが作成される）。coreファイルが作成された場合、「gdb core」を入力すると、問題を解けるかもしれない。でも、coreファイルは自動作成できない場合がおおい。その原因はcoreファイルのサイズはデフォルト値０に設定されたから。もしcoreファイルを作成しようと思ったら、前のulimitを使って、「ulimit -c 1024」設定してからcoreファイルが自動的に作成される。</p>
+<p>②backtrace()とobjdumpを使って、セグメンテーション違反場所を探す。<br>この方法はちゃんと見ていないので、後回す</p>
+<p>ps:<br>不具合調査するときは、「objdump」と「nm」コマンドも使っていた。</p>
+	  
+	</div>
+
+	<div>
+  	<center>
+	<div class="pagination">
+<ul class="pagination">
+	 
+				
+    	<li class="prev"><a href="/2015/02/25/file-no-close/" class="alignleft prev"><i class="fa fa-arrow-circle-o-left"></i>Prev</a></li>
+  		
+
+        <li><a href="/archives"><i class="fa fa-archive"></i>Archive</a></li>
+
+		
+		   <li class="next"><a href="/2015/02/24/alsa-2/" class="alignright next">Next<i class="fa fa-arrow-circle-o-right"></i></a></li>         
+        
+	
+</ul>
+</div>
+
+    </center>
+	</div>
+	
+	<!-- comment -->
+	
+<section id="comment">
+  <h2 class="title">Comments</h2>
+
+  
+</section>
+
+	
+	</div> <!-- col-md-9/col-md-12 -->
+	
+	
+		<div class="col-md-3"> 
+
+	<!-- date -->
+	
+	<div class="meta-widget">
+	<i class="fa fa-clock-o"></i>
+	Feb 25 2015 
+	</div>
+	
+
+	<!-- categories -->
+    
+
+	<!-- tags -->
+	
+	<div class="meta-widget">
+	<a data-toggle="collapse" data-target="#tags"><i class="fa fa-tags"></i></a>		  
+    <ul id="tags" class="tag_box list-unstyled collapse in">	  
+	    
+  <li><a href="/tags/linux/">linux<span>3</span></a></li>
+    </ul>
+	</div>
+		
+
+	<!-- toc -->
+	<div class="meta-widget">
+	
+	</div>
+	
+    <hr>
+	
+</div><!-- col-md-3 -->
+
+	
+
+</div><!-- row -->
+
+	</div>
+  </div>
+  <div class="container-narrow">
+  <footer> <p>
+  &copy; 2015 Yly
+  
+      with help from <a href="http://zespia.tw/hexo/" target="_blank">Hexo</a> and <a href="http://getbootstrap.com/" target="_blank">Twitter Bootstrap</a>. Theme by <a href="http://github.com/wzpan/hexo-theme-freemind/">Freemind</a>.    
+</p> </footer>
+</div> <!-- container-narrow -->
+  
+<a id="gotop" href="#">   
+  <span>▲</span> 
+</a>
+
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+   </html>
