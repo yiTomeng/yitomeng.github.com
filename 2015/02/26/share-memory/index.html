@@ -3,13 +3,15 @@
 <head>
   <meta charset="utf-8">
   
-  <title>share-memory | Yly&#39;s Blog</title>
+  <title>共有メモリ | Yly&#39;s Blog</title>
   <meta name="author" content="Yly">
+  
+  <meta name="description" content="現在linux上で多数プロセスと多数スレッドのアプリがどんどん現れる。そうすると、関連プロセス間に通信必要な場合がおおい。最近のプロジェクトで目に遭うので、とりあえずメモしとく。linuxにおいてプロセス間の通信といえば、IPCはよく聞こえる。それはlinuxのプロセス間通信との意味だ。IPC通信方">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="share-memory"/>
+  <meta property="og:title" content="共有メモリ"/>
   <meta property="og:site_name" content="Yly&#39;s Blog"/>
 
   
@@ -73,7 +75,7 @@
 
 	
 		<div class="page-header">		
-			<h1> share-memory</h1>
+			<h1> 共有メモリ</h1>
 		</div>		
 	
 
@@ -89,7 +91,30 @@
 
 	<!-- content -->
 	<div class="mypage">		
-	    	  
+	    <p>現在linux上で多数プロセスと多数スレッドのアプリがどんどん現れる。そうすると、関連プロセス間に通信必要な場合がおおい。最近のプロジェクトで目に遭うので、とりあえずメモしとく。<br>linuxにおいてプロセス間の通信といえば、IPCはよく聞こえる。それはlinuxのプロセス間通信との意味だ。IPC通信方法はいくつある。例えば、共有メモリ、パイプ、ソケット通信など。最近使っているのは共有メモリとソケット通信二つ。ここは共有メモリをメモしとく。(ソケットは別途でメモするかも）</p>
+<p>簡単にいえば、共有メモリ通信は各プロセスアクセスできるメモリであるため、プロセス間に通信できる。<br>linuxには共有メモリに関連するapi関数は:shmget(),shmat(),shmdt(),shmctl();<br>shmget関数、shmat関数、shmdt関数、shmctl関数は、共有メモリの操作を行ないます。共有メモリとは、システムが管理しているメモリの一部を共有して、複数のプロセスがプロセス間通信を行う技法です。複数のプロセスが共有しますので、プロセス間の待ち合わせや排他制御が必要な場合がありますが、その場合は<a href="http://www.c-lang.net/semop/index.html" target="_blank" rel="external">セマフォ</a>を使用するとよいでしょう。</p>
+<p>共有メモリは、次の手順で操作します。<br>関数を使う前に、必ず<sys shm.h="">をincludeすること（<sys ipc.h="">は必要かどうかテストしてない）。<br>shmget関数で共有メモリ・セグメントの識別子（セグメントID）を取得します。なお、共有メモリ・セグメントは新規作成もできます。<br>それぞれのプロセスは、shmat関数で自プロセスのアドレス空間に共有メモリ・セグメントを付加（アタッチ）します。これで、共有メモリへのデータの読み書きが可能になります。<br>それぞれのプロセスで共有メモリが不要になったら、shmdt関数で自プロセスのアドレス空間に配置された共有メモリ・セグメントを分離（デタッチ）します。<br>shmctl関数で共有メモリ・セグメントを破棄します。<br>これらの関数は、Ｃ言語のライブラリ関数（標準関数）ではありませんので、コンパイラにより、使えない場合があります。</sys></sys></p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;sys/shm.h&gt;</span></div><div class="line"><span class="keyword">int</span> shmget(key_t key， size_t size， <span class="keyword">int</span> shmflg);</div></pre></td></tr></table></figure>
+
+<p>keyは共有メモリ・セグメントに対するキーを指定します。0(IPC_PRIVATE)の場合、新しい共有メモリを作る。もし0以上の場合、shmflg次第だ。普通はftok()の返却値である。<br>sizeは作成する共有メモリ・セグメントの大きさをバイト単位で指定します。なお、指定した値はヘッダファイルに定義してあるPAGE_SIZEの値の倍数に切り上げた（round up）大きさになります。0以上の場合、新規のサイズである。0の場合は共有メモリを取得するだけの意味だ。<br>shmflgはオプションを指定します。0：共有メモリ識別子を取得、なければエラー発生する。IPC_CREAT:もしshmflg&amp;IPC_CREATはTRUEの場合、カーネルにはkeyと同じキーがなければ作る、あれば、共有メモリの識別子を返す。IPC_CREAT|IPC_EXCL：カーネルにはkeyと同じキーがなければ共有メモリを作る、あれば、エラー発生する。</p>
+<p>戻り値として、正常終了した場合はセグメント識別子（セグメントID）を、エラーの場合は-1を返します。なお、セグメントIDは正の整数値です。</p>
+<p>以下はほかのところからコピーしてきた内容を見せる(参照できると思う）：<br>{<br>新規に共有メモリ・セグメントを作成するには、次の２つの方法があります。</p>
+<p>第１引数のkeyにIPC_PRIVATEを指定します。<br>第１引数のkeyにユニークな値を指定し、第３引数のshmflgにIPC_CREATを指定します。なお、shmflgにIPC_CREATとIPC_EXCLを指定すると、keyに対する共有メモリ・セグメントが既に存在していた場合にエラーになります。<br>第３引数のshmflgの下位９ビットは、その共有メモリ・セグメントの所有者、グループ、他人に対するアクセス許可の定義として使用します。</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;sys/shm.h&gt;</span></div><div class="line"><span class="keyword">void</span> *shmat(<span class="keyword">int</span> shmid， <span class="keyword">const</span> <span class="keyword">void</span> *shmaddr， <span class="keyword">int</span> shmflg);</div><div class="line"><span class="keyword">int</span> shmdt(<span class="keyword">const</span> <span class="keyword">void</span> *shmaddr);</div></pre></td></tr></table></figure>
+
+<p>shmidは共有メモリ・セグメントに対するセグメント識別子（セグメントID）を指定します。<br>*shmaddrは共有メモリ・セグメントを付加（アタッチ）するアドレスを指定します。<br>shmflgはオプションを指定します。SHM_RDONLYを指定すると、共有メモリ・セグメントを読み込み専用で付加します。</p>
+<p>戻り値として、正常終了した場合は付加した共有メモリ・セグメントのアドレスを、エラーの場合は(void *)-1を返します。</p>
+<p>第２引数の*shmaddrにNULLを指定すると、システムは共有メモリ・セグメントを適切な（使用されていない）アドレスに付加します。また、NULLでないアドレスを指定して、第３引数のshmflgにSHM_RNDを指定すると、指定したアドレスはセグメントの境界アドレスの最小倍数（SHMLBA）に切り捨てた（rounding down）アドレスになります。その他の場合は、ページ境界のアドレスでなければなりません。</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;sys/shm.h&gt;</span></div><div class="line"><span class="keyword">int</span> shmctl(<span class="keyword">int</span> shmid， <span class="keyword">int</span> cmd， <span class="keyword">struct</span> shmid_ds *buf);</div></pre></td></tr></table></figure>
+
+<p>shmidは共有メモリ・セグメントに対するセグメント識別子（セグメントID）を指定します。<br>cmdは共有メモリ・セグメントに対する制御命令を指定します。<br>*bufは共有メモリ・セグメントに関する情報が格納されているhmid_ds構造体へのポインタを指定します。</p>
+<p>戻り値として、正常終了した場合は０を、エラーの場合は-1を返します。</p>
+<p>第２引数のcmdには、次のようなコマンドを指定できます。</p>
+<p>コマンド    内容<br>IPC_STAT    カーネルデータ構造体の情報を第３引数の<em>bufで指定されたshmid_ds構造体にコピーします。<br>IPC_SET    第３引数の</em>bufで指定されたshmid_ds構造体のいくつかのメンバの値を、カーネルデータ構造体に設定します。<br>IPC_RMID    共有メモリ・セグメントを破棄します。実際には破棄済みのマークだけを付けておき、関連する全てのプロセスが共有メモリ・セグメントを分離（デタッチ）したら破棄します。<br>次の例題プログラムは、子プロセス１が共有メモリにメッセージを書き込み、子プロセス２がそれを表示しています。</p>
+<p>プログラム　例</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div></pre></td><td class="code"><pre><div class="line">#include &lt;stdio.h&gt;</div><div class="line">#include &lt;unistd.h&gt;</div><div class="line">#include &lt;sys/wait.h&gt;</div><div class="line">#include &lt;stdlib.h&gt;</div><div class="line">#include &lt;sys/shm.h&gt;</div><div class="line">#include &lt;string.h&gt;</div><div class="line"></div><div class="line">int main()</div><div class="line">{</div><div class="line">int                shmid;       /* セグメントID */</div><div class="line">int                child_cnt;</div><div class="line"></div><div class="line">/* 共有メモリ・セグメントを新規作成 */</div><div class="line">if ((shmid = shmget(IPC_PRIVATE， 100， 0600)) == -1){</div><div class="line">perror('main : shmget ');</div><div class="line">exit(EXIT_FAILURE);</div><div class="line">}</div><div class="line"></div><div class="line">/* １つ目の子プロセスを生成 */</div><div class="line">if (fork() == 0) {</div><div class="line">/* 子プロセス */</div><div class="line">char      *shmaddr;</div><div class="line"></div><div class="line">printf('子プロセス１開始\n');</div><div class="line"></div><div class="line">/* 共有メモリ・セグメントをプロセスのアドレス空間に付加 */</div><div class="line">if ((shmaddr = shmat(shmid， NULL， 0)) == (void *)-1) {</div><div class="line">perror('子プロセス１ : shmat ');</div><div class="line">exit(EXIT_FAILURE);</div><div class="line">}</div><div class="line"></div><div class="line">/* 共有メモリ・セグメントに文字列をコピー */</div><div class="line">strcpy(shmaddr， 'Hello.\nBy.\n');</div><div class="line"></div><div class="line">/* 共有メモリ・セグメントを分離 */</div><div class="line">if (shmdt(shmaddr) == -1) {</div><div class="line">perror('子プロセス１ : shmdt ');</div><div class="line">exit(EXIT_FAILURE);</div><div class="line">}</div><div class="line"></div><div class="line">printf('子プロセス１終了\n');</div><div class="line">exit(EXIT_SUCCESS);</div><div class="line">}</div><div class="line"></div><div class="line">/* ２つ目の子プロセスを生成 */</div><div class="line">if (fork() == 0) {</div><div class="line">/* 子プロセス */</div><div class="line">char      *shmaddr;</div><div class="line"></div><div class="line">printf('子プロセス２開始\n');</div><div class="line"></div><div class="line">/* 待ち合わせ */</div><div class="line">sleep(1);</div><div class="line"></div><div class="line">/* 共有メモリ・セグメントをプロセスのアドレス空間に付加 */</div><div class="line">if ((shmaddr = shmat(shmid， NULL， SHM_RDONLY)) == (void *)-1) {</div><div class="line">perror('子プロセス２ : shmat ');</div><div class="line">exit(EXIT_FAILURE);</div><div class="line">}</div><div class="line"></div><div class="line">printf('子プロセス２：共有メモリの内容を表示します\n');</div><div class="line">/* 共有メモリ・セグメントの内容を表示 */</div><div class="line">printf('%s'， shmaddr);</div><div class="line"></div><div class="line">/* 共有メモリ・セグメントを分離 */</div><div class="line">if (shmdt(shmaddr) == -1) {</div><div class="line">perror('子プロセス２ : shmdt ');</div><div class="line">exit(EXIT_FAILURE);</div><div class="line">}</div><div class="line"></div><div class="line">printf('子プロセス２終了\n');</div><div class="line">exit(EXIT_SUCCESS);</div><div class="line">}</div><div class="line"></div><div class="line">/* 親プロセス。子プロセスの終了を待つ */</div><div class="line">for (child_cnt = 0; child_cnt &lt; 2; ++child_cnt) {</div><div class="line">wait(NULL);</div><div class="line">}</div><div class="line"></div><div class="line">/* 共有メモリ・セグメントを破棄 */</div><div class="line">if (shmctl(shmid， IPC_RMID， NULL) == -1){</div><div class="line">perror('main : shmctl ');</div><div class="line">exit(EXIT_FAILURE);</div><div class="line">}</div><div class="line"></div><div class="line">printf('親プロセス終了\n');</div><div class="line">return EXIT_SUCCESS;</div><div class="line">}</div><div class="line">例の実行結果</div><div class="line"></div><div class="line">$ ./shm.exe</div><div class="line">子プロセス１開始</div><div class="line">子プロセス１終了</div><div class="line">子プロセス２開始</div><div class="line">子プロセス２：共有メモリの内容を表示します</div><div class="line">Hello.</div><div class="line">By.</div><div class="line">子プロセス２終了</div><div class="line">親プロセス終了</div><div class="line">$</div><div class="line">}</div></pre></td></tr></table></figure>
+
+	  
 	</div>
 
 	<div>
@@ -139,6 +164,14 @@
     
 
 	<!-- tags -->
+	
+	<div class="meta-widget">
+	<a data-toggle="collapse" data-target="#tags"><i class="fa fa-tags"></i></a>		  
+    <ul id="tags" class="tag_box list-unstyled collapse in">	  
+	    
+  <li><a href="/tags/linux/">linux<span>4</span></a></li>
+    </ul>
+	</div>
 		
 
 	<!-- toc -->
