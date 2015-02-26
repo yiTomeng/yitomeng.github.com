@@ -91,6 +91,173 @@
 	
 	<!-- display as entry -->
 		<h3 class="title">
+			<a href="/2015/02/26/gitServerCreate/" ></a>
+			<span class="date"> Feb 26 2015 </span>
+		</h3>
+	
+
+
+			<div class="entry">
+  <div class="row">
+  
+	<div class="col-md-12">
+	  
+	
+	  <p>title: [转]搭建Git服务器及设置public key<br>date: 2015-02-26 10:03:16</p>
+<h2 id="tags:_工具安装">tags: 工具安装</h2>
+<h3 id="搭建Git服务器">搭建Git服务器</h3>
+<p>830次阅读<br>在远程仓库一节中，我们讲了远程仓库实际上和本地仓库没啥不同，纯粹为了7x24小时开机并交换大家的修改。</p>
+<p>GitHub就是一个免费托管开源代码的远程仓库。但是对于某些视源代码如生命的商业公司来说，既不想公开源代码，又舍不得给GitHub交保护费，那就只能自己搭建一台Git服务器作为私有仓库使用。</p>
+<p>搭建Git服务器需要准备一台运行Linux的机器，强烈推荐用Ubuntu或Debian，这样，通过几条简单的apt命令就可以完成安装。</p>
+<p>假设你已经有sudo权限的用户账号，下面，正式开始安装。</p>
+<p>第一步，安装git：</p>
+<p>$ sudo apt-get install git<br>第二步，创建一个git用户，用来运行git服务：</p>
+<p>$ sudo adduser git<br>第三步，创建证书登录：</p>
+<p>收集所有需要登录的用户的公钥，就是他们自己的id_rsa.pub文件，把所有公钥导入到/home/git/.ssh/authorized_keys文件里，一行一个。</p>
+<p>第四步，初始化Git仓库：</p>
+<p>先选定一个目录作为Git仓库，假定是/srv/sample.git，在/srv目录下输入命令：</p>
+<p>$ sudo git init —bare sample.git<br>Git就会创建一个裸仓库，裸仓库没有工作区，因为服务器上的Git仓库纯粹是为了共享，所以不让用户直接登录到服务器上去改工作区，并且服务器上的Git仓库通常都以.git结尾。然后，把owner改为git：</p>
+<p>$ sudo chown -R git:git sample.git<br>第五步，禁用shell登录：</p>
+<p>出于安全考虑，第二步创建的git用户不允许登录shell，这可以通过编辑/etc/passwd文件完成。找到类似下面的一行：</p>
+<p>git:x:1001:1001:,,,:/home/git:/bin/bash<br>改为：</p>
+<p>git:x:1001:1001:,,,:/home/git:/usr/bin/git-shell<br>这样，git用户可以正常通过ssh使用git，但无法登录shell，因为我们为git用户指定的git-shell每次一登录就自动退出。</p>
+<p>第六步，克隆远程仓库：</p>
+<p>现在，可以通过git clone命令克隆远程仓库了，在各自的电脑上运行：</p>
+<p>$ git clone git@server:/srv/sample.git<br>Cloning into ‘sample’…<br>warning: You appear to have cloned an empty repository.<br>剩下的推送就简单了。</p>
+<p>管理公钥<br>如果团队很小，把每个人的公钥收集起来放到服务器的/home/git/.ssh/authorized_keys文件里就是可行的。如果团队有几百号人，就没法这么玩了，这时，可以用Gitosis来管理公钥。</p>
+<p>这里我们不介绍怎么玩Gitosis了，几百号人的团队基本都在500强了，相信找个高水平的Linux管理员问题不大。</p>
+<p>管理权限<br>有很多不但视源代码如生命，而且视员工为窃贼的公司，会在版本控制系统里设置一套完善的权限控制，每个人是否有读写权限会精确到每个分支甚至每个目录下。因为Git是为Linux源代码托管而开发的，所以Git也继承了开源社区的精神，不支持权限控制。不过，因为Git支持钩子（hook），所以，可以在服务器端编写一系列脚本来控制提交等操作，达到权限控制的目的。Gitolite就是这个工具。</p>
+<p>这里我们也不介绍Gitolite了，不要把有限的生命浪费到权限斗争中。</p>
+<p>小结<br>搭建Git服务器非常简单，通常10分钟即可完成；</p>
+<p>要方便管理公钥，用Gitosis；</p>
+<p>要像SVN那样变态地控制权限，用Gitolite。</p>
+<h3 id="windows下git库的ssh连接，使用public_key的方法">windows下git库的ssh连接，使用public key的方法</h3>
+<p>在windows下进行项目开发，使用git，通过ssh方式与git库连接，而ssh方式用public key实现连接。</p>
+<p>首先需要下载mygit，安装后使用git bash。git bash（有GUI界面，如安装TortoiseGit后就可以使用）。我主要使用命令行，其命令行系统类似linux环境的基本操作命令，可以直接看到c:，如cd /d/mygitwork，进入我的D盘下的工程目录，放置开发的工程。</p>
+<p>我的操作：在windows的git bash中用ssh -keygen ssh -keygen -t rsa生成了密钥对，cp .ssh/id_rsa.pub authorized_keys 改名。 将这个key交给同事，他作为github上的库创建者，添加到工程git库中，我clone该git库后，就可以使提交代码了，具体步骤：</p>
+<p>如果已经用自己邮箱生成过ssh key，可以省去步骤1和2<br>1、生成ssh-key<br>ssh-keygen -t rsa -C “XXX@company.com”</p>
+<p>2、重命名ssh-key<br>cp ~/.ssh/id_rsa.pub ~/.ssh/XXX@company.com.pub</p>
+<p>3、发送邮件给git库负责人，由其添加到git库中，获得使用权限，将~/.ssh/xxx@company.com.pub放入邮件附件</p>
+<p>与git库连接：ssh方式要利用public key实现写功能。</p>
+<p>（一般公司会搭建自己的git服务器，如果是自己，可以使用免费的git 服务器github。具体的使用，在后面介绍）</p>
+<p>git库建好后，用git clone连接，但这样的库，只有读功能，没有写功能。如果想写，必须用ssh方式，连接后，提交自己的public key，由该库的管理员将该public key添加到git库，产生访问权限。</p>
+<p>public key 的原理在这里有介绍<a href="http://hi.baidu.com/beijiqieys/item/4643900f6ae51223a0312dc8" target="_blank" rel="external">http://hi.baidu.com/beijiqieys/item/4643900f6ae51223a0312dc8</a></p>
+<p>具体的命令是用ssh -keygen -t rsa生成密钥对，在客户端上创建一对公私钥 （公钥文件：~/.ssh/id_rsa.pub； 私钥文件：~/.ssh/id_rsa）<br>然后把公钥放到服务器上（~/.ssh/authorized_keys）, 自己保留好私钥.在使用ssh登录时,ssh程序会发送私钥去和服务器上的公钥做匹配.如果匹配成功就可以登录了。</p>
+<p>将公钥文件复制到远程服务器上：</p>
+<p>$ scp ~/.ssh/id_dsa.pub user@remote.host:pubkey.txt<br>$ ssh user@remote.host<br>$ mkdir ~/.ssh<br>$ chmod 700 .ssh<br>$ cat pubkey.txt &gt;&gt; ~/.ssh/authorized_keys<br>$ rm ~/pubkey.txt<br>$ chmod 600 ~/.ssh/*<br>$ exit</p>
+<p>//权限的设置非常重要,因为不安全的设置安全设置,会让你不能使用RSA功能。</p>
+<p>cat .ssh/id_rsa.pub | ssh user_B@your_ip “cat - &gt;&gt; /root/.ssh/authorized_keys”</p>
+<p>也可以用</p>
+<pre><code>       ssh-keygen     <span class="preprocessor">#生成证书。</span>
+
+       ssh-<span class="keyword">copy</span>-<span class="keyword">id</span> -i <span class="keyword">id</span>-rsa<span class="variable">.pub</span> 用户@ip    <span class="preprocessor">#把证书传到远程的那个机器上 并 生成authorized_keys文件。</span>
+</code></pre><p>github上的库创建：</p>
+<p>创建Github Repository，注册Github账户(<a href="https://github.com/)，在GitHub，一个项目对应唯一的Git版本库，创建一个新的版本库就是创建一个新的项目。访问仪表板（Dashboard）页面，如下图所示，可以看到关注的版本库中已经有一个，但自己的版本库为零。在显示为零的版本库列表面板中有一个按钮“New" target="_blank" rel="external">https://github.com/)，在GitHub，一个项目对应唯一的Git版本库，创建一个新的版本库就是创建一个新的项目。访问仪表板（Dashboard）页面，如下图所示，可以看到关注的版本库中已经有一个，但自己的版本库为零。在显示为零的版本库列表面板中有一个按钮“New</a> Repository”，点击该按钮开始创建新版本库。</p>
+<p>我们为新建立的版本库命名为“kxt-example”，相应的项目名亦为“ kxt-example ”，创建完毕后访问项目页，提示版本库尚未初始化，并给出如何初始化版本库的帮助，如下图所示(由于我的kxt-example已经初始化过了，所以下面的图片是截另一个未初始化的项目)。务必要 set up git，这个官网已经讲的很清楚了，这里不再介绍。</p>
+<p>注意任何GitHub用户均可使用该URL访问此公开版本库，但只有版本库建立者luffyke具有读写权限，其他人只有只读权限。在初始化版本库之前，最好先确认是否是用正确的公钥进行认证。  </p>
+
+	
+	</div>
+	
+  
+</div>
+	<a type="button" href="/2015/02/26/gitServerCreate/#more" class="btn btn-default more">Read More</a>
+</div>
+
+		
+			
+	
+	<!-- display as entry -->
+		<h3 class="title">
+			<a href="/2015/02/26/ulimit-and-segmentfault/" >ulimitの説明　と　セグメンテーション違反</a>
+			<span class="date"> Feb 26 2015 </span>
+		</h3>
+	
+
+
+			<div class="entry">
+  <div class="row">
+  
+	<div class="col-md-12">
+	  
+	
+	  <h2 id="はじめに">はじめに</h2>
+<p>linux Cを開発する時、セグメンテーション違反はよく見えるよね（すげーSE者とPG者を除外）。その時は解決しないといけないだろう。その原因はいつもポインタのせいだと思う。</p>
+<h2 id="一、ulimitにおいて簡単な説明">一、ulimitにおいて簡単な説明</h2>
+<p>でも、環境の問題があるという言い方も存在する(ネットで調べた結果）。例えば、ローカル変数で11MBを使っているが、linuxのデフォルトのスタックサイズは10MBの場合、スタックオーバーフローになってしまうのだ。どのように現在使っている環境のデフォルトスタックサイズを確認できるか？今から説明する。</p>
+<p>現在の環境を確認しようと思ったら、ulimitを使って、目的を達成できる。ulimitに関しては、以下のように使える：</p>
+<pre><code>
+-a    設定されている各種の制限を表示する
+-c    プロセスがファイルへコア・ダンプする容量を最大Nブロックに制限する
+-d    プロセスのデータ領域のサイズを最大Nキロ・バイトに制限する
+-f    出力ファイルのサイズを最大Nブロックに制限する
+-l    メモリーにロックできるサイズを最大Nキロ・バイトに制限する
+-m    メモリーの使用量を最大Nキロ・バイトに制限する
+-n    ファイル・ディスクリプタの数を最大N個に制限する
+-p    パイプのサイズを最大N×512バイトに制限する
+-s    スタック・サイズを最大Nキロ・バイトに制限する
+-t    CPU時間を最大N秒に制限する
+-u    ユーザー1人が起動できるプロセス数を最大N個に制限する
+-v    シェルが利用できる仮想メモリーを最大Nキロ・バイトに制限する
+-H    いったん設定した制限を解除できなくする
+-S    -Hで制限した最大値以内の値を設定する
+-t    コマンドの型を表示する
+</code></pre>
+
+<p>もしスタックサイズを調べてほしいなら、「ulimit -s」を入力すればいい。<br>もしスタックサイズを設定してほしい場合、「ulimit -s SIZE」を入力する（SIZEは設定したがるサイズである）<br>注意するべき点は、この設定したら、今の実行中shellしか効かない。もしシステム全体に効くように設定しようと、/etc/profileに先のコマンドを入力するべきだ。(shellで echo ulimit -s 1024を入力してもいい）。</p>
+<h2 id="二、セグメンテーション違反">二、セグメンテーション違反</h2>
+<p>セグメンテーション違反はC言語のPG者たちに対して、とても厄介なものといっても過言ではない(No1ではないね）。<br>このエラーの原因はいくつある、現在思い出せる原因を挙げましょう：<br>①スタックの領域が足りない。<br>この原因は理解しやすい。スタックが足りない場合、つまり、スタックオーバーフローになってしまう。<br>一つ例を挙げろ：</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> main()</div><div class="line">{</div><div class="line">	main();</div><div class="line">	<span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>上の例により、無限ループで関数を呼び出すと、スタックが足りないので、セグメンテーション違反になる。</p>
+<p>②アプリは使えないアドレスを使おうとする。<br>例えば、</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> *p = NULL;</div><div class="line">*p = <span class="number">4</span>;</div></pre></td></tr></table></figure>
+
+<p>C言語では、NULL = (void *)0、ソースはそうなったら、アドレス０の内容を変更しようと、エラー発生する。</p>
+<p>③変更できない内容を変更しよう<br>また例を挙げましょう：</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">char</span> *p = <span class="string">"Hello core"</span>;</div><div class="line">p[<span class="number">0</span>] = <span class="string">'m'</span>;</div></pre></td></tr></table></figure>
+
+<p>上の用なソースを実行したら、定数をかえようと、セグメンテーション違反が発生する。</p>
+<h2 id="三、セグメンテーション違反のデバッグ">三、セグメンテーション違反のデバッグ</h2>
+<p>①gdbでデバッグ：<br>linuxには最初からgdbがインストールされた場合がおおいから、セグメンテーション違反が発生する場合、gdbで調査できる。<br>例えば、a.out実行するとエラーが発生する場合、[gdb a.out]を入力し、gdbでデバッグを開始させる。それで、「run」を実行すると、実行ファイルが動いている。セグメンテーション違反発生時、デバッグは一旦停止し、どこで止まっているのかが出力された。そうすると、どこが問題なのかをわかっているかもしれない。</p>
+<p>gdbでデバッグはcoreファイルを使って、デバッグもできる。普通にはセグメンテーション違反の場合、core dumpファイルが作成される。（windows アプリと似ている。ウィンドウズでは、デバッグ時、mapファイルとsymbolファイルを事前に作成し、アプリが落ちる場合、dumpファイルも作成される。自動的作成されることがあるかもしれない、もし作成されていない場合、落ちる画面を閉じないままで、タスク管理でアプリの項目を右クリックして、ダンプファイルを作成を選択し、ダンプファイルが作成される）。coreファイルが作成された場合、「gdb core」を入力すると、問題を解けるかもしれない。でも、coreファイルは自動作成できない場合がおおい。その原因はcoreファイルのサイズはデフォルト値０に設定されたから。もしcoreファイルを作成しようと思ったら、前のulimitを使って、「ulimit -c 1024」設定してからcoreファイルが自動的に作成される。</p>
+<p>②backtrace()とobjdumpを使って、セグメンテーション違反場所を探す。<br>この方法はちゃんと見ていないので、後回す</p>
+<p>ps:<br>不具合調査するときは、「objdump」と「nm」コマンドも使っていた。<br>-rdynamic 全部フラグをダイナミックフラグとしてフラグ表に入れる。<br>[他の場所見つからなかったので、中国語で説明]g++ 加上 -rdynamic 参数实质上相当于ld链接的时候加上-E或者–export-dynamic参数，效果与g++ -Wl,-E或者g++ -Wl,–export-dynamic的效果是一样的。</p>
+<p>-gdb補充：<br><code>x&#39; というコマンド (</code>examine’ からの由来) は、プログラムのデータ 型を参照せずにメモリを調べるときに使うことができます。あなたが調べたい メモリのフォーマットは、系統だった方法で記述されます。許可されている フォーマットは、以前の章で述べてきたフォーマットのスーパーセットに なっています。</p>
+<p><code>x&#39; はスラッシュの後にフォーマットに関する記述、そしてその後に アドレスに関する記述を受け付けます。式には (もし通したとしても) ポインタ 値が使えないので; そこにはメモリのバイト列の整数値やアドレスが使われます。 式の詳細は、See section 式。 例えば、</code>x/4xw $sp’ はスタックポインタ上のメモリを4ワードの 16進数で表示します。</p>
+<p>このケースにおける出力フォーマットでは、調査するメモリの大きさと、 そのユニットの内容をどのように表示するのかということを記述します。 これには、この後に説明する1つか2つの文字で指定します:</p>
+<p>次に示す文字は、まさに調査対象のユニットのサイズを記述します:</p>
+<p><code>b&#39;
+単一バイトで調査します。</code>h’<br>半ワード (2バイト) で調査します。<br><code>w&#39;
+ワード (4バイト) で調査します。 多くのアセンブラとCPU設計者は、祖先となる1970年代のマシンが実際に 2バイトのワードを利用していたという名残により、</code>ワード’をいまだ 16ビットのサイズとして定義しています。しかし、一般的に言うと、 <code>ワード&#39;は、マシンが通常レジスタで操作したり記憶したりするサイズだと いうのが、語源です。GDB が動作する全てのマシンにおいて、このサイズは 32ビットです。</code>g’<br>巨大ワード (8バイト) で調査します。<br>次の文字は内容を表示する方法を記述するためのものです:</p>
+<p><code>x&#39;
+符号なし16進整数値で表示します。</code>d’<br>符号付き10進整数値で表示します。<br><code>u&#39;
+符号なし10進整数値で表示します。</code>o’<br>符号なし8進整数値で表示します。<br><code>a&#39;
+絶対アドレス、またはシンボルに定義された相対アドレスで表示します。</code>c’<br>文字定数で表示します。<br><code>f&#39;
+浮動小数点で表示します。これは、</code>w’ と <code>g&#39; のサイズでのみ 有効です。</code>s’<br>null-ターミネートされた文字列として表示します。指定されたユニットサイズは 無視され; かわりに null キャラクタまで達する多くの (null キャラクタを含んだ) バイト 列を持つことになります。<br>`i’<br>アセンブラ・シンタックスでの (もしくは、それに近い) マシン・ インストラクションを表示します。指定されたユニットサイズは無視され; 1つのインストラクションを構成するバイト数は、そのマシンで利用されている オペコードとアドレッシングモードの種類に依存します。<br>表示方法やユニットサイズの指定がなかった場合、使用されるデフォルト値は 最後に使用されたのと同じものです。もし、あなたがスラッシュの後に何の 文字も使用したくないという場合は、スラッシュもまた省略できます。</p>
+<p>あなたは、また、調査対象アドレスも省略可能です。この場合、ユニットが 最後に調査されたアドレスが使用されます。これは、データをベースとして ユニットサイズが計算されるような、文字列とインストラクション・ フォーマットのためのものです: というのも、次の文字列やインストラクションは正しい位置から調査を 開始しなければならないからです。<code>print&#39; コマンドは、時折</code>x’ コマンドのためのデフォルトアドレスを設定します; メモリ上に位置する値が表示された時、デフォルトで同一の 位置が設定されています。<code>info line&#39; はまた</code>x’ と同様に 指定された行のマシンコードの開始アドレスにデフォルトを設定し、 `info breakpoints’ は、最後に表示されたブレークポイントの アドレスにデフォルトを設定します。</p>
+<p>RET により `x’ コマンドがリピートされた時は全く同様の内容を リピートしません: 指定されたアドレスは (もしあれば) 無視され、リピートされたコマンドは 同一の場所のかわりに連続したメモリ位置を調査します。</p>
+<p>あなたは、更に、コマンドに対してスラッシュの後に (また、もしあれば フォーマット文字の前に) 繰り返し回数を書くことで、いくつかの連続的な メモリユニットを調査することができます。繰り返し回数は10進数の整数で なければなりません。これは、`x’ コマンドがリピートされた時と 同様な効果を持ち、出力は行ごとのいくつかのユニットに対して、より コンパクトになります。例えば、</p>
+<p>x/10i $pc<br>は、選択されているフレームにおいて次に実行されるインストラクションから 10個のインストラクションを表示します。この後、あなたは、次のように入力 することで、更に10個のインストラクションを表示できます。</p>
+<p>x/10<br>これは、フォーマットとアドレスにおいてデフォルト値が使われるからです。</p>
+<p>`x’ コマンドによって表示されるアドレスとその内容は、それらが あまりにも多すぎ、それらを記録するのが邪魔なので、変数履歴に代入 されません。そのかわりに、GDB は、簡易変数 $<em> と $_</em> の 値を式で使うという別な手段を提供しています。</p>
+<p>`x’ コマンドの後、最後に調査されたアドレスは、 式内の簡易変数 $<em> によって参照可能となります。そのアドレスの 内容は、調査されたならば、簡易変数 $_</em> においても有効です。</p>
+<p>もし、`x’ コマンドが繰り返されたならば、アドレスと内容は最後に 表示されたメモリユニットの形態として保存されます; これは、最後の行の出力においていくつかのユニットが表示された時の 最後のアドレス表示の内容とは異なります。</p>
+<p>`disassemble’ という特別なコマンドは、与えられたメモリレンジを マシン・インストラクションとしてダンプします。デフォルトのメモリ レンジは、選択されているフレーム上のプログラムカウンタを取り囲む 関数の範囲です。このコマンドへ一つの引数を渡した場合、これは、 プログラムカウンタ値となります; この値を取り囲む関数がダンプされます。2つの引数を渡した場合は、 ダンプするアドレスの範囲を示します。(最初が包括的、2つ目が排他的。)</p>
+
+	
+	</div>
+	
+  
+</div>
+	<a type="button" href="/2015/02/26/ulimit-and-segmentfault/#more" class="btn btn-default more">Read More</a>
+</div>
+
+		
+			
+	
+	<!-- display as entry -->
+		<h3 class="title">
 			<a href="/2015/02/25/file-no-close/" >file-no-close</a>
 			<span class="date"> Feb 25 2015 </span>
 		</h3>
@@ -133,71 +300,6 @@
   
 </div>
 	<a type="button" href="/2015/02/25/file-no-close/#more" class="btn btn-default more">Read More</a>
-</div>
-
-		
-			
-	
-	<!-- display as entry -->
-		<h3 class="title">
-			<a href="/2015/02/25/ulimit-and-segmentfault/" >ulimitの説明　と　セグメンテーション違反</a>
-			<span class="date"> Feb 25 2015 </span>
-		</h3>
-	
-
-
-			<div class="entry">
-  <div class="row">
-  
-	<div class="col-md-12">
-	  
-	
-	  <h2 id="はじめに">はじめに</h2>
-<p>linux Cを開発する時、セグメンテーション違反はよく見えるよね（すげーSE者とPG者を除外）。その時は解決しないといけないだろう。その原因はいつもポインタのせいだと思う。</p>
-<h2 id="一、ulimitにおいて簡単な説明">一、ulimitにおいて簡単な説明</h2>
-<p>でも、環境の問題があるという言い方も存在する(ネットで調べた結果）。例えば、ローカル変数で11MBを使っているが、linuxのデフォルトのスタックサイズは10MBの場合、スタックオーバーフローになってしまうのだ。どのように現在使っている環境のデフォルトスタックサイズを確認できるか？今から説明する。</p>
-<p>現在の環境を確認しようと思ったら、ulimitを使って、目的を達成できる。ulimitに関しては、以下のように使える：</p>
-<pre><code>
--a    設定されている各種の制限を表示する
--c    プロセスがファイルへコア・ダンプする容量を最大Nブロックに制限する
--d    プロセスのデータ領域のサイズを最大Nキロ・バイトに制限する
--f    出力ファイルのサイズを最大Nブロックに制限する
--l    メモリーにロックできるサイズを最大Nキロ・バイトに制限する
--m    メモリーの使用量を最大Nキロ・バイトに制限する
--n    ファイル・ディスクリプタの数を最大N個に制限する
--p    パイプのサイズを最大N×512バイトに制限する
--s    スタック・サイズを最大Nキロ・バイトに制限する
--t    CPU時間を最大N秒に制限する
--u    ユーザー1人が起動できるプロセス数を最大N個に制限する
--v    シェルが利用できる仮想メモリーを最大Nキロ・バイトに制限する
--H    いったん設定した制限を解除できなくする
--S    -Hで制限した最大値以内の値を設定する
--t    コマンドの型を表示する
-</code></pre>
-
-<p>もしスタックサイズを調べてほしいなら、「ulimit -s」を入力すればいい。<br>もしスタックサイズを設定してほしい場合、「ulimit -s SIZE」を入力する（SIZEは設定したがるサイズである）<br>注意するべき点は、この設定したら、今の実行中shellしか効かない。もしシステム全体に効くように設定しようと、/etc/profileに先のコマンドを入力するべきだ。(shellで echo ulimit -s 1024を入力してもいい）。</p>
-<h2 id="二、セグメンテーション違反">二、セグメンテーション違反</h2>
-<p>セグメンテーション違反はC言語のPG者たちに対して、とても厄介なものといっても過言ではない(No1ではないね）。<br>このエラーの原因はいくつある、現在思い出せる原因を挙げましょう：<br>①スタックの領域が足りない。<br>この原因は理解しやすい。スタックが足りない場合、つまり、スタックオーバーフローになってしまう。</p>
-<p>②アプリは使えないアドレスを使おうとする。<br>例えば、</p>
-<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> *p = NULL;</div><div class="line">*p = <span class="number">4</span>;</div></pre></td></tr></table></figure>
-
-<p>C言語では、NULL = (void *)0、ソースはそうなったら、アドレス０の内容を変更しようと、エラー発生する。</p>
-<p>③変更できない内容を変更しよう<br>また例を挙げましょう：</p>
-<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">char</span> *p = <span class="string">"Hello core"</span>;</div><div class="line">p[<span class="number">0</span>] = <span class="string">'m'</span>;</div></pre></td></tr></table></figure>
-
-<p>上の用なソースを実行したら、定数をかえようと、セグメンテーション違反が発生する。</p>
-<h2 id="三、セグメンテーション違反のデバッグ">三、セグメンテーション違反のデバッグ</h2>
-<p>①gdbでデバッグ：<br>linuxには最初からgdbがインストールされた場合がおおいから、セグメンテーション違反が発生する場合、gdbで調査できる。<br>例えば、a.out実行するとエラーが発生する場合、[gdb a.out]を入力し、gdbでデバッグを開始させる。それで、「run」を実行すると、実行ファイルが動いている。セグメンテーション違反発生時、デバッグは一旦停止し、どこで止まっているのかが出力された。そうすると、どこが問題なのかをわかっているかもしれない。</p>
-<p>gdbでデバッグはcoreファイルを使って、デバッグもできる。普通にはセグメンテーション違反の場合、core dumpファイルが作成される。（windows アプリと似ている。ウィンドウズでは、デバッグ時、mapファイルとsymbolファイルを事前に作成し、アプリが落ちる場合、dumpファイルも作成される。自動的作成されることがあるかもしれない、もし作成されていない場合、落ちる画面を閉じないままで、タスク管理でアプリの項目を右クリックして、ダンプファイルを作成を選択し、ダンプファイルが作成される）。coreファイルが作成された場合、「gdb core」を入力すると、問題を解けるかもしれない。でも、coreファイルは自動作成できない場合がおおい。その原因はcoreファイルのサイズはデフォルト値０に設定されたから。もしcoreファイルを作成しようと思ったら、前のulimitを使って、「ulimit -c 1024」設定してからcoreファイルが自動的に作成される。</p>
-<p>②backtrace()とobjdumpを使って、セグメンテーション違反場所を探す。<br>この方法はちゃんと見ていないので、後回す</p>
-<p>ps:<br>不具合調査するときは、「objdump」と「nm」コマンドも使っていた。</p>
-
-	
-	</div>
-	
-  
-</div>
-	<a type="button" href="/2015/02/25/ulimit-and-segmentfault/#more" class="btn btn-default more">Read More</a>
 </div>
 
 		
@@ -693,50 +795,6 @@ Github Pagesのリポジトリ
 </div>
 
 		
-			
-	
-	<!-- display as entry -->
-		<h3 class="title">
-			<a href="/2015/01/27/hello-world/" >Hello World</a>
-			<span class="date"> Jan 27 2015 </span>
-		</h3>
-	
-
-
-			<div class="entry">
-  <div class="row">
-  
-	<div class="col-md-12">
-	  
-	
-	  <p>Welcome to <a href="http://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="http://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="http://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">trobuleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick_Start">Quick Start</h2>
-<h3 id="Create_a_new_post">Create a new post</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-
-<p>More info: <a href="http://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run_server">Run server</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-
-<p>More info: <a href="http://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate_static_files">Generate static files</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-
-<p>More info: <a href="http://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy_to_remote_sites">Deploy to remote sites</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-
-<p>More info: <a href="http://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
-
-	
-	</div>
-	
-  
-</div>
-	<a type="button" href="/2015/01/27/hello-world/#more" class="btn btn-default more">Read More</a>
-</div>
-
-		
 
 		</div>
 
@@ -746,6 +804,16 @@ Github Pagesのリポジトリ
 		<div class="pagination">
 <ul class="pagination">
 	 
+		
+          <li class="prev disabled"><a><i class="fa fa-arrow-circle-o-left"></i>Prev</a></li>
+        
+
+        <li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+
+		
+		   <li class="next"> <a href="/page/2/" class="alignright next">Next<i class="fa fa-arrow-circle-o-right"></i></a> </li>          
+        
+	
 </ul>
 </div>
 
@@ -776,22 +844,6 @@ Github Pagesのリポジトリ
 		<ul class="tag_box inline list-unstyled">		
 		
 		    
-			    <li><a href="/tags/C/">C++<span>1</span></a></li>
-			
-		
-		    
-			    <li><a href="/tags/C/">C<span>3</span></a></li>
-			
-		
-		    
-		
-		    
-			    <li><a href="/tags/linux/">linux<span>3</span></a></li>
-			
-		
-		    
-			    <li><a href="/tags/工具安装/">工具安装<span>1</span></a></li>
-			
 		
 		    
 		
@@ -799,6 +851,22 @@ Github Pagesのリポジトリ
 		
 		    
 			    <li><a href="/tags/挨拶/">挨拶<span>1</span></a></li>
+			
+		
+		    
+			    <li><a href="/tags/linux/">linux<span>3</span></a></li>
+			
+		
+		    
+			    <li><a href="/tags/C/">C<span>3</span></a></li>
+			
+		
+		    
+			    <li><a href="/tags/工具安装/">工具安装<span>1</span></a></li>
+			
+		
+		    
+			    <li><a href="/tags/C/">C++<span>1</span></a></li>
 			
 		
 		 
@@ -813,11 +881,15 @@ Github Pagesのリポジトリ
   <ul class="entry list-unstyled">
     
       <li>
-        <a href="/2015/02/25/file-no-close/" ><i class="fa fa-file-o"></i>file-no-close</a>
+        <a href="/2015/02/26/gitServerCreate/" ><i class="fa fa-file-o"></i></a>
       </li>
     
       <li>
-        <a href="/2015/02/25/ulimit-and-segmentfault/" ><i class="fa fa-file-o"></i>ulimitの説明　と　セグメンテーション違反</a>
+        <a href="/2015/02/26/ulimit-and-segmentfault/" ><i class="fa fa-file-o"></i>ulimitの説明　と　セグメンテーション違反</a>
+      </li>
+    
+      <li>
+        <a href="/2015/02/25/file-no-close/" ><i class="fa fa-file-o"></i>file-no-close</a>
       </li>
     
       <li>
@@ -826,10 +898,6 @@ Github Pagesのリポジトリ
     
       <li>
         <a href="/2015/02/20/alsa-1/" ><i class="fa fa-file-o"></i>alsaの勉強（1）ーー OSS</a>
-      </li>
-    
-      <li>
-        <a href="/2015/02/02/function-default-c/" ><i class="fa fa-file-o"></i>C语言中默认参数的实现及相关define</a>
       </li>
     
   </ul>
