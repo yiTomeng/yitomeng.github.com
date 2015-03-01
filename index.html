@@ -91,6 +91,80 @@
 	
 	<!-- display as entry -->
 		<h3 class="title">
+			<a href="/2015/03/01/alsa-2/" >alsaの勉強（2）ーー alsaについて簡単な説明</a>
+			<span class="date"> Mar 1 2015 </span>
+		</h3>
+	
+
+
+			<div class="entry">
+  <div class="row">
+  
+	<div class="col-md-12">
+	  
+	
+	  <h2 id="一、はじめに">一、はじめに</h2>
+<p>linux音声再生の一つOSSは前編で説明した。確かにOSSを利用して、いろいろな処理を行うことができるけど、直接デバイスを扱うなんか、違和感が感じられる。だから、ほかのできたものがあるかどうかを探す必要がある(OSSを使うなら特に問題ないと思うけど、日本でソフト開発に向けて、一番重要なのは安全性だから、OSSを使ったら、OSSの仕組みちゃんと理解していない状況で、心配をかけちゃう）。そのため、調査した結果はalsaを用いることだ。</p>
+<h2 id="二、alsaは何でしょう？">二、alsaは何でしょう？</h2>
+<p>alsaは「Advanced Linux Sound Architecture」の略称である。これはサウンドカードのデバイスドライバを提供するOpen Sound System (OSS)を置き換えるために開発されたLinuxカーネルコンポーネントである。ALSAプロジェクトの初期の目標は、サウンドカードハードウェアの自動設定や、複数のサウンドデバイスのスマートな取扱いなどであったが、それらは概ね達成された。開発になかなか関係なく詳しい内容は<a href="http://ja.wikipedia.org/wiki/Advanced_Linux_Sound_Architecture" target="_blank" rel="external">alsa wiki</a></p>
+<h2 id="三、alsaの仕組みにおいて、簡単な説明">三、alsaの仕組みにおいて、簡単な説明</h2>
+<p>alsaはlinuxのコンポーネントであることを特に知っているはずなので、linuxの特徴を持っているに決まっているなのでしょう。linuxには、ハードウェアに対して、ドライバーが必要となるのは当然だ(ほかのOSも同じだろうね）。だから、alsa driverを提供している(open source）。なぜalsaは人気になるのか？その１つはアプリAPIを提供すること。alsa libをインストールしてから、alsaのAPIを使うことができる。(僕の環境「asianux」には、最初から搭載しているので、わざわざインストール必要はない。alsa libのインストールに関しては、別途記載するかもしれない）。alsaの仕組みは以下の画像のように：<br><img src="/pic/alsa-arch1.png" alt="alsa arch"><br>そのため、アプリを作る時は、lib中のAPI関数を呼び出したら、driverを通じて、ハードウェアをコントロールできる。<br>以上の内容は大雑把で見るものだ。詳しい内容を知るため、深く追求しないとわからない。時間はないので、それは後回しにする。</p>
+<h2 id="四、四つ基本な操作">四、四つ基本な操作</h2>
+<p>linuxにはデバイスにとって、ファイルと同じように扱うので、基本的にはopen(),close(),write(),read()四つ基本な操作があるだろう。今からちょっと詳しく説明しましょう。<br>①　open()、close()<br>この二つはよくペアとして現れるだろう。まずopen()関数を呼び出して、デバイスのハンドルを取得する。それから、このデバイスに対しての処理を行える。もちろん、open()関数の戻り値の判断が必要なのだ。処理は終わってから、close()関数を呼び出すことは絶対必要なのだ。<br>OSSについて、/dev/dspデバイスは一回しか開けない(一つアプリに複数openした、できない)。つまり、open()を一度呼び出すと、close()関数を呼び出す前に、ほかの場所でopen()関数は効かない。もし多数音声ファイルを同時に放送したい場合、/dev/mixerを使ったら、目的を達成することができる。それにしても、設定はちょっとややこしい。<br>ALSAでは、何回open()しても、問題にならないです(別々のアプリでopen()関数を呼び出すと、同時に放送できた。)。libがある限り、ハードウェアの方は考えなくてもいい。</p>
+<p>②　read()、write()<br>read()はデバイスからデータを読み込む関数だ。つまり、録音用な関数だ。write()とread()関数は逆だ。write()はデバイスに書き込む関数だ。<br>今回のプロジェクトについては、read()はつかわない、放送だけだから、write()を使っている。そのため、write()関数を使ったとき仕組みを説明しましょう（自分の理解だね）。<br>サウンドカードにはハードバッファがある。それはring bufferである。<br>理解ⅰ「いろいろな資料から理解した内容」：write()関数を呼び出すときは、まず、データをもう一つバッファ(名前はランタイムバッファ）に入れる。ハードバッファに空き領域があれば、DMA経由で、ハードバッファに入れる。もし、今write()で一気に500バイトを書き込もうとしたら、そのときハードバッファに空き領域は400バイト、そうすると、戻り値は400バイト、残り100バイトはランタイムバッファに残っている。もし1200バイトを書き込もうとしたら、ハードウェアバッファには400バイト空き領域しかない、そのとき、戻り値は800かもしれない、原因としては、書き込むには時間がかかる、その途中で、デバイスはどんどん放送するため、空き領域増えている、限界(周期サイズというもの、今後説明する予定）になってから、まだランタイムに通知し、パッファに書き込むから。</p>
+<p>理解ⅱ「先見たばかり」：<a href="http://www.linuxidc.com/Linux/2012-07/65903p2.htm" target="_blank" rel="external">new opinion</a></p>
+<p>read()とwrite()はもう一つ問題がある。それはアプリ側で操作スピードとハードウェアの処理スピードが合うか合わないかの問題だ。<br>ちょっと想像しろ：<br>read()の場合、アプリ側で読み込むスピードが早すぎると、ハードウェアバッファに昔のデータはもう読み込んだ、最新のデータまだこない、この場合はアプリ側読み込むことができないだろう。alsaにそれはoverrunと呼ぶ。<br>write()の場合、アプリ側の書き込むスピードが遅すぎると、ハードウェアバッファに前書き込んだデータを特に放送終わっちゃったから、ハードウェア現在放送できなくなる、もしくは、変なデータが放送しちゃう(ring bufferのため、前のデータ再放送するかもしれない）。alsaにそれはunderrunと呼ぶ。<br>overrunはunderrunとともにXRUNを呼ぶ。</p>
+<h2 id="五、なぜalsaを使う">五、なぜalsaを使う</h2>
+<p>一つネットwebsiteを挙げましょう：<a href="http://www.linuxjournal.com/article/7391?page=0,0" target="_blank" rel="external">alsa advantage</a><br>alsaはossにより、レベル高いlibを用意したので、ハードの方は考えずに使える。<br>ossで書き込むと読み込むのスピードをコントロールしにくい。alsaにはコントロールすると、周期サイズを設定すれば問題なくなる。そしたら、放送や録音には一番厄介なものが解決された。</p>
+<p>以上にはalsaに対して簡単で説明した。私にとって、全体(libやdriverソース）を見ないと、断言できないと思う。ざっと見たら、以上のような動きだ。今後は証明するかもしれない。とりあえず、今は記載しとく、深く内容はまだ知らないけど、特に問題ないはずだ。</p>
+
+	
+	</div>
+	
+  
+</div>
+	<a type="button" href="/2015/03/01/alsa-2/#more" class="btn btn-default more">Read More</a>
+</div>
+
+		
+			
+	
+	<!-- display as entry -->
+		<h3 class="title">
+			<a href="/2015/02/27/sigterm-sigkill/" >SIGTERM と SIGKILLの何年ぶりの初対面</a>
+			<span class="date"> Feb 27 2015 </span>
+		</h3>
+	
+
+
+			<div class="entry">
+  <div class="row">
+  
+	<div class="col-md-12">
+	  
+	
+	  <p>linuxにはたくさんシグナルがあるだろう。その中にSIGTERMとSIGKILLはどこが違うのかを気になってて、とりあえず簡単で記載しとく。</p>
+<p>SIGTERMはアプリを終了させるため、アプリに送る。アプリはSIGTERMシグナルを捉えてから、ハンドラで処理を行う。もしアプリ側でハンドラを設定しない場合、デフォルト処理を行う。それはアプリを終了処理とのことだ。でもSIGTERMの全体を把握できない状態で、デフォルト処理はどういうふうにアプリを閉じさせるかは知らないだろう。アプリの特別内容を保存せずにアプリを閉じちゃうかもしれない。もしDBとやりとり途中でアプリはSIGTERMを捉えると、DBのデータが混乱する可能性が高いだろう。そのため、個人的にはデフォルト処理を行うことはおすすめではない。</p>
+<p>ざっと見ると、SIGKILLとSIGTERMはだいたい同じけど、両方ともはアプリを終了させるものだが、実際には致命的な差がある。それは、SIGKILLのシグナルは捉えないまま、強制終了との機能だ。</p>
+<p>一般的にはSIGTERMは「kill pid」の形で、SIGKILLは「kill -9 pid」の形である。</p>
+<p>以下の例を挙げろう:</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdio.h&gt;</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;signal.h&gt;</span></div><div class="line"></div><div class="line"><span class="keyword">void</span> SigTerm(<span class="keyword">void</span>);</div><div class="line"><span class="keyword">void</span> SigKill(<span class="keyword">void</span>);</div><div class="line"></div><div class="line"><span class="keyword">int</span> main(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</div><div class="line">{</div><div class="line">	</div><div class="line">	<span class="keyword">if</span> ( signal(SIGTERM,(<span class="keyword">void</span> *)SigTerm) == SIG_ERR ){          <span class="comment">//ソフトウェア終了シグナルハンドラの設定</span></div><div class="line">		<span class="built_in">printf</span>(<span class="string">"sigterm\n"</span>);</div><div class="line">        <span class="keyword">return</span>(-<span class="number">1</span>);</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="preprocessor">#<span class="keyword">if</span> 0				<span class="comment">//コメントアウトしないと、ifに入る</span></span></div><div class="line">    <span class="keyword">if</span> ( signal(SIGKILL,(<span class="keyword">void</span> *)SigKill) == SIG_ERR ){          <span class="comment">//ソフトウェア終了シグナルハンドラの設定</span></div><div class="line">    	<span class="built_in">printf</span>(<span class="string">"sigkill\n"</span>);</div><div class="line">        <span class="keyword">return</span>(-<span class="number">2</span>);</div><div class="line">    }</div><div class="line">    <span class="preprocessor">#<span class="keyword">endif</span></span></div><div class="line">    <span class="keyword">int</span> a = <span class="number">0</span>;</div><div class="line">    <span class="keyword">while</span>(<span class="number">1</span>)</div><div class="line">    {</div><div class="line">    	a++;</div><div class="line">    	sleep(<span class="number">1</span>);</div><div class="line">    }</div><div class="line">	<span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">}</div><div class="line"></div><div class="line"><span class="keyword">void</span> SigTerm(<span class="keyword">void</span>)</div><div class="line">{</div><div class="line">	<span class="built_in">printf</span>(<span class="string">"SigTerm\n"</span>);</div><div class="line">	<span class="keyword">return</span>;</div><div class="line">}</div><div class="line"></div><div class="line"><span class="keyword">void</span> SigKill(<span class="keyword">void</span>)</div><div class="line">{</div><div class="line">	<span class="built_in">printf</span>(<span class="string">"SigKill\n"</span>);</div><div class="line">	<span class="keyword">return</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>上の例の結果：<br>kill　pidをしたら、「SigTerm」がターミナルに表示され、アプリはそのままで動き続ける。<br>kill -9 pidを入力したら、「強制終了」が表示され、アプリ終了される。<br>もしデフォルトSIGTERM処理であれば、kill pidを入力すると、「終了しました」とのメッセージが表示され、アプリは終了される。</p>
+
+	
+	</div>
+	
+  
+</div>
+	<a type="button" href="/2015/02/27/sigterm-sigkill/#more" class="btn btn-default more">Read More</a>
+</div>
+
+		
+			
+	
+	<!-- display as entry -->
+		<h3 class="title">
 			<a href="/2015/02/26/share-memory/" >共有メモリ</a>
 			<span class="date"> Feb 26 2015 </span>
 		</h3>
@@ -126,6 +200,7 @@
 <p>プログラム　例</p>
 <figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div></pre></td><td class="code"><pre><div class="line">#include &lt;stdio.h&gt;</div><div class="line">#include &lt;unistd.h&gt;</div><div class="line">#include &lt;sys/wait.h&gt;</div><div class="line">#include &lt;stdlib.h&gt;</div><div class="line">#include &lt;sys/shm.h&gt;</div><div class="line">#include &lt;string.h&gt;</div><div class="line"></div><div class="line">int main()</div><div class="line">{</div><div class="line">int                shmid;       /* セグメントID */</div><div class="line">int                child_cnt;</div><div class="line"></div><div class="line">/* 共有メモリ・セグメントを新規作成 */</div><div class="line">if ((shmid = shmget(IPC_PRIVATE， 100， 0600)) == -1){</div><div class="line">perror('main : shmget ');</div><div class="line">exit(EXIT_FAILURE);</div><div class="line">}</div><div class="line"></div><div class="line">/* １つ目の子プロセスを生成 */</div><div class="line">if (fork() == 0) {</div><div class="line">/* 子プロセス */</div><div class="line">char      *shmaddr;</div><div class="line"></div><div class="line">printf('子プロセス１開始\n');</div><div class="line"></div><div class="line">/* 共有メモリ・セグメントをプロセスのアドレス空間に付加 */</div><div class="line">if ((shmaddr = shmat(shmid， NULL， 0)) == (void *)-1) {</div><div class="line">perror('子プロセス１ : shmat ');</div><div class="line">exit(EXIT_FAILURE);</div><div class="line">}</div><div class="line"></div><div class="line">/* 共有メモリ・セグメントに文字列をコピー */</div><div class="line">strcpy(shmaddr， 'Hello.\nBy.\n');</div><div class="line"></div><div class="line">/* 共有メモリ・セグメントを分離 */</div><div class="line">if (shmdt(shmaddr) == -1) {</div><div class="line">perror('子プロセス１ : shmdt ');</div><div class="line">exit(EXIT_FAILURE);</div><div class="line">}</div><div class="line"></div><div class="line">printf('子プロセス１終了\n');</div><div class="line">exit(EXIT_SUCCESS);</div><div class="line">}</div><div class="line"></div><div class="line">/* ２つ目の子プロセスを生成 */</div><div class="line">if (fork() == 0) {</div><div class="line">/* 子プロセス */</div><div class="line">char      *shmaddr;</div><div class="line"></div><div class="line">printf('子プロセス２開始\n');</div><div class="line"></div><div class="line">/* 待ち合わせ */</div><div class="line">sleep(1);</div><div class="line"></div><div class="line">/* 共有メモリ・セグメントをプロセスのアドレス空間に付加 */</div><div class="line">if ((shmaddr = shmat(shmid， NULL， SHM_RDONLY)) == (void *)-1) {</div><div class="line">perror('子プロセス２ : shmat ');</div><div class="line">exit(EXIT_FAILURE);</div><div class="line">}</div><div class="line"></div><div class="line">printf('子プロセス２：共有メモリの内容を表示します\n');</div><div class="line">/* 共有メモリ・セグメントの内容を表示 */</div><div class="line">printf('%s'， shmaddr);</div><div class="line"></div><div class="line">/* 共有メモリ・セグメントを分離 */</div><div class="line">if (shmdt(shmaddr) == -1) {</div><div class="line">perror('子プロセス２ : shmdt ');</div><div class="line">exit(EXIT_FAILURE);</div><div class="line">}</div><div class="line"></div><div class="line">printf('子プロセス２終了\n');</div><div class="line">exit(EXIT_SUCCESS);</div><div class="line">}</div><div class="line"></div><div class="line">/* 親プロセス。子プロセスの終了を待つ */</div><div class="line">for (child_cnt = 0; child_cnt &lt; 2; ++child_cnt) {</div><div class="line">wait(NULL);</div><div class="line">}</div><div class="line"></div><div class="line">/* 共有メモリ・セグメントを破棄 */</div><div class="line">if (shmctl(shmid， IPC_RMID， NULL) == -1){</div><div class="line">perror('main : shmctl ');</div><div class="line">exit(EXIT_FAILURE);</div><div class="line">}</div><div class="line"></div><div class="line">printf('親プロセス終了\n');</div><div class="line">return EXIT_SUCCESS;</div><div class="line">}</div><div class="line">例の実行結果</div><div class="line"></div><div class="line">$ ./shm.exe</div><div class="line">子プロセス１開始</div><div class="line">子プロセス１終了</div><div class="line">子プロセス２開始</div><div class="line">子プロセス２：共有メモリの内容を表示します</div><div class="line">Hello.</div><div class="line">By.</div><div class="line">子プロセス２終了</div><div class="line">親プロセス終了</div><div class="line">$</div><div class="line">}</div></pre></td></tr></table></figure>
 
+<p>注意すべきことは共有メモリを作ってから、子プロセスを作ると、親プロセスと子プロセスは両方使える。共有できる。一旦子プロセスはexec()などの関数を呼び出すと、共有メモリを二度と使えない。</p>
 
 	
 	</div>
@@ -348,38 +423,6 @@
   
 </div>
 	<a type="button" href="/2015/02/25/file-no-close/#more" class="btn btn-default more">Read More</a>
-</div>
-
-		
-			
-	
-	<!-- display as entry -->
-		<h3 class="title">
-			<a href="/2015/02/24/alsa-2/" >alsaの勉強（2）ーー alsaについて簡単な説明</a>
-			<span class="date"> Feb 24 2015 </span>
-		</h3>
-	
-
-
-			<div class="entry">
-  <div class="row">
-  
-	<div class="col-md-12">
-	  
-	
-	  <h2 id="一、はじめに">一、はじめに</h2>
-<p>linux音声再生の一つOSSは前編で説明した。確かにOSSを利用して、いろいろな処理を行うことができるけど、直接デバイスを扱うなんか、違和感が感じられる。だから、ほかのできたものがあるかどうかを探す必要がある(OSSを使うなら特に問題ないと思うけど、日本でソフト開発に向けて、一番重要なのは安全性だから、OSSを使ったら、OSSの仕組みちゃんと理解していない状況で、心配をかけちゃう）。そのため、調査した結果はalsaを用いることだ。</p>
-<h2 id="二、alsaは何でしょう？">二、alsaは何でしょう？</h2>
-<p>alsaは「Advanced Linux Sound Architecture」の略称である。これはサウンドカードのデバイスドライバを提供するOpen Sound System (OSS)を置き換えるために開発されたLinuxカーネルコンポーネントである。ALSAプロジェクトの初期の目標は、サウンドカードハードウェアの自動設定や、複数のサウンドデバイスのスマートな取扱いなどであったが、それらは概ね達成された。開発になかなか関係なく詳しい内容は<a href="http://ja.wikipedia.org/wiki/Advanced_Linux_Sound_Architecture" target="_blank" rel="external">alsa wiki</a></p>
-<h2 id="三、alsaの仕組みにおいて、簡単な説明">三、alsaの仕組みにおいて、簡単な説明</h2>
-<p>alsaはlinuxのコンポーネントであることを特に知っているはずなので、linuxの特徴を持っているに決まっているなのでしょう。linuxには、ハードウェアに対して、ドライバーが必要となるのは当然だ(ほかのOSも同じだろうね）。だから、alsa driverを提供している(open source）。なぜalsaは人気になるのか？その１つはアプリAPIを提供すること。alsa libをインストールしてから、alsaのAPIを使うことができる。(僕の環境「asianux」には、最初から搭載しているので、わざわざインストール必要はない。alsa libのインストールに関しては、別途記載するかもしれない）。alsaの仕組みは以下の画像のように：<br><img src="/pic/alsa-arch1.png" alt="alsa arch"></p>
-
-	
-	</div>
-	
-  
-</div>
-	<a type="button" href="/2015/02/24/alsa-2/#more" class="btn btn-default more">Read More</a>
 </div>
 
 		
@@ -690,132 +733,6 @@ extern int play_wave(const char *filename, int refresh_times);                  
 </div>
 
 		
-			
-	
-	<!-- display as entry -->
-		<h3 class="title">
-			<a href="/2015/01/27/hexoInstall/" >hexo Install</a>
-			<span class="date"> Jan 27 2015 </span>
-		</h3>
-	
-
-
-			<div class="entry">
-  <div class="row">
-  
-	<div class="col-md-12">
-	  
-	
-	  <p>こんにちは、エンジニアののびすけです。静的サイトをいやらしい風にtypoする今日この頃です。</p>
-<p>前回、Github Pagesを使ったWebページ公開の記事「Git初心者でも大丈夫！完全無料でGithub PagesにWebページを公開する方法」を書きました。</p>
-<p>Github Pagesではデータベースやサーバーサイドプログラムを使うことができないので、弊社ブログのようにWordPressを使ってブログ構築をすることはできません。</p>
-<p>そこで今回は静的サイトジェネレータとGithub Pagesを組み合わせることで無料でブログを公開する方法を紹介します。<br>静的サイトジェネレータ</p>
-<p>静的サイトジェネレータとはコマンドラインでのカンタンな操作でHTML/CSS/JavaScriptなどを生成し、Webページ作成を少ない手間で作ることができるツールの総称です。</p>
-<p>静的なページにすることで、</p>
-<pre><code>セキュリティリスクが少ない
-SEOに強い
-表示速度が高速
-</code></pre><p>といったメリットもあります。</p>
-<p>JekyllというRuby製のツールが今のところ最も有名ですが、静的サイトジェネレータは色々な人が作っていて、乱立している状態です。</p>
-<p>StaticSiteGeneratorsというサイトでは、現時点での静的サイトジェネレータ一覧を見ることができます。2014/7/29現在では289種類ものジェネレータが存在するみたいです。</p>
-<p>これらのツールはGithub上でソースコードを公開していて、Githubのスター(ブックマークのようなもの)の数でのランキングを見てみると、</p>
-<pre><code><span class="title">Jekyll</span>
-Octopress
-Pelican
-Middleman
-Hexo
-</code></pre><p>という順番で人気があることが分かります。今回はこの中でもJavaScript製のHEXOを利用してみたいと思います。</p>
-<p>参考：Static Site Generators</p>
-<p><a href="http://staticsitegenerators.net/" target="_blank" rel="external">http://staticsitegenerators.net/</a><br>HEXO</p>
-<p>人気上位のJekyllやOctopressはRuby製のツールですが、私は全てJavaScriptで完結させたいと思っているので、Node.js製のHEXOを利用してみます。<br>（HEXO以外にもmetalsmith、DocPad、Harp、Wintersmith、assembleなどのツールもNode.jsで作られていますが、今回は割愛します。）</p>
-<p>HEXOは数ある静的サイトジェネレータの中でもブログ生成に特化しています。記事はMarkDown方式で書くことができ、カンタンなコマンドでページの追加やテーマ、プラグインのインストールができます。</p>
-<p>参考：HEXO</p>
-<p><a href="http://hexo.io/" target="_blank" rel="external">http://hexo.io/</a></p>
-<p>参考：JekyllからHexoに移行した｜じまぐてっく</p>
-<p><a href="http://nakajmg.github.io/blog/2014-07-21/change-generator.html" target="_blank" rel="external">http://nakajmg.github.io/blog/2014-07-21/change-generator.html</a><br>HEXOで作ったブログを2分でGithub Pagesへ公開<br>準備</p>
-<p>まずは、以下の環境を揃えてください。</p>
-<pre><code>Node.jsが動く環境
-Github Pagesのリポジトリ
-</code></pre><p>Node.jsのインストールをしていない人は、こちらの記事を参考にしてNode.jsをインストールしてください。</p>
-<p>「いまアツいJavaScript！ゼロから始めるNode.js入門〜5分で環境構築編〜」</p>
-<p>Github PagesでWebページ公開をしたことがない人は、こちらの記事を参考にしてGithub Pagesのリポジトリを作ってみましょう。</p>
-<p>参考：Git初心者でも大丈夫！完全無料でGithub PagesにWebページを公開する方法<br><a href="http://liginc.co.jp/web/html-css/html/96453" target="_blank" rel="external">http://liginc.co.jp/web/html-css/html/96453</a><br>HEXOを使い1分でブログ生成</p>
-<p>HEXOをインストールしましょう。npm installで簡単にインストールできます。</p>
-<p>$ npm install -g hexo</p>
-<p>次にブログを作ってみます。hexo init [プロジェクト名]でブログのひな形を生成できます。今回はmyblogという名前で作ってみます。</p>
-<p>$ hexo init myblog</p>
-<p>myblogというフォルダが生成されます。</p>
-<p>myblogフォルダへ移動して必要なモジュールをインストールします。</p>
-<p>$ cd myblog<br>$ npm install</p>
-<p>たったこれだけで準備は完了です。</p>
-<p>ローカルサーバーを立ち上げてみましょう。</p>
-<p>$ hexo server<br>[info] Hexo is running at <a href="http://localhost:4000/" target="_blank" rel="external">http://localhost:4000/</a>. Press Ctrl+C to stop.</p>
-<p>この状態でブラウザから<a href="http://localhost:4000/にアクセスしてみましょう。" target="_blank" rel="external">http://localhost:4000/にアクセスしてみましょう。</a></p>
-<p>こんな感じでブログができ上がっていると思います。</p>
-<p>めちゃ簡単ですね！ そして爆速！</p>
-<p>確認ができたら、</p>
-<p>Ctrl ＋C</p>
-<p>でサーバーを止めることができます。<br>HEXOで作ったブログをGithub Pagesで公開する</p>
-<p>上記の手順でブログ生成ができたので、このブログを世界に向けて公開してみましょう。</p>
-<p>lsコマンドでmyblogフォルダの中を確認すると_config.ymlというファイルが生成されていることがわかります。</p>
-<p>$ ls<br>_config.yml  node_modules scaffolds    themes<br>db.json      package.json source</p>
-<p>HEXOではこの_config.ymlが設定ファイルになっていて、このファイルにGithub Pagesの設定を記述していきます。</p>
-<p>エディタで_config.ymlを編集しましょう。</p>
-<p>$ vi _config.yml</p>
-<p>デフォルトの状態はこのような記述になっています。</p>
-<p>・・・(省略)・・・</p>
-<h1 id="Deployment">Deployment</h1>
-<h2 id="Docs:_http://hexo-io/docs/deployment-html">Docs: <a href="http://hexo.io/docs/deployment.html" target="_blank" rel="external">http://hexo.io/docs/deployment.html</a></h2>
-<p>deploy:<br>  type:</p>
-<p>これを以下のように編集しましょう。</p>
-<p>・・・(省略)・・・</p>
-<h1 id="Deployment-1">Deployment</h1>
-<h2 id="Docs:_http://hexo-io/docs/deployment-html-1">Docs: <a href="http://hexo.io/docs/deployment.html" target="_blank" rel="external">http://hexo.io/docs/deployment.html</a></h2>
-<p>deploy:<br>  type: github<br>  repo: git@github.com:n0bisuke/n0bisuke.github.io.git<br>  branch: master</p>
-<p>repoの部分は自分のGithub Pagesのリポジトリに合わせて適宜変更してください。<br>設定が完了したら、以下のコマンドでデプロイをします。<br>generateというコマンドで静的HTMLをpublicフォルダ内に生成することができるのですが、deployコマンドに-gオプションを付けることで、これを同時に行ってくれます。</p>
-<p>$ hexo deploy -g</p>
-<p>エラーが出なければ成功です。自分のGithub Pagesのページを見てみましょう。</p>
-<p>私のGithub PagesでもHEXOでブログを作ってみたので、デモ画面として確認してみてください。<br>記事を追加してみる</p>
-<p>HEXOでは記事の追加も凄まじく簡単です。</p>
-<p>$ hexo new &quot;新規ページタイトル&quot;</p>
-<p>これだけで記事の追加ができます。</p>
-<p>例えば “hexoについて”という記事ページを追加する場合は以下の通りです。</p>
-<p>hexo new &quot;hexoについて&quot;<br>[info] File created at /Users/nobisuke/Sites/myblog/source/_posts/hexoについて.md</p>
-<p>source/_postsフォルダに”hexoについて.md”というMarkDownファイルが生成されていると思います。<br>あとはこのMarkDownファイルを編集すれば記事の詳細を書くことができます。</p>
-<p>$ vi source/_posts/hexoについて.md</p>
-<p>MarkDownファイルを開くと以下のように記述されています。</p>
-<p>title: hexoについて<br>date: 2014-07-29 19:29:05</p>
-<h2 id="tags:">tags:</h2>
-<p>(ここに本文を記述)</p>
-<p>titleとdateにはあらかじめメタ情報が付与されていると思います。<br>tagsには任意のタグを設定することができます。今回はhexoというタグを付けてみました。<br>本文は—の下にMarkDownで書いていきます。HTMLでも記述可能です。</p>
-<p>title: hexoについて<br>date: 2014-07-29 19:29:05</p>
-<h2 id="tags:_hexo">tags: hexo</h2>
-<h1 id="hexoとは">hexoとは</h1>
-<p>静的サイトジェネレータの1つです。</p>
-<h1 id="シンタックス">シンタックス</h1>
-<p><a href="http://qiita.com" target="_blank" rel="external">Qiita</a>のようにシンタックスハイライトされます。</p>
-<figure class="highlight server.js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"> </div><div class="line"><span class="keyword">var</span> http = <span class="built_in">require</span>(<span class="string">'http'</span>);</div><div class="line">http.createServer(<span class="function"><span class="keyword">function</span> <span class="params">(req, res)</span> </span>{</div><div class="line">  res.writeHead(<span class="number">200</span>, {<span class="string">'Content-Type'</span>: <span class="string">'text/plain'</span>});</div><div class="line">  res.end(<span class="string">'Hello World\n'</span>);</div><div class="line">}).listen(<span class="number">1337</span>, <span class="string">'127.0.0.1'</span>);</div><div class="line"><span class="built_in">console</span>.log(<span class="string">'Server running at http://127.0.0.1:1337/'</span>);</div></pre></td></tr></table></figure>
-
-<p>&amp;amp;amp;amp;lt;p&amp;amp;amp;amp;gt;<br>記事の編集が終わったら、ローカル環境で確認してみましょう。<br>&amp;amp;amp;amp;lt;/p&amp;amp;amp;amp;gt;<br>&amp;amp;amp;amp;lt;p&amp;amp;amp;amp;gt;<br>先程と同じように&amp;amp;amp;amp;lt;code class=&quot;command&quot;&amp;amp;amp;amp;gt;hexo server&amp;amp;amp;amp;lt;/code&amp;amp;amp;amp;gt;コマンドでローカルサーバーを立ち上げて確認しましょう。<br>&amp;amp;amp;amp;lt;/p&amp;amp;amp;amp;gt;<br>&amp;amp;amp;amp;lt;p&amp;amp;amp;amp;gt;<br>実は&amp;amp;amp;amp;lt;code class=&quot;command&quot;&amp;amp;amp;amp;gt;hexo server&amp;amp;amp;amp;lt;/code&amp;amp;amp;amp;gt;は&amp;amp;amp;amp;lt;code class=&quot;command&quot;&amp;amp;amp;amp;gt;hexo s&amp;amp;amp;amp;lt;/code&amp;amp;amp;amp;gt;としても同じ動作をするのでショートカットとして使うと良いと思います。<br>同じように&amp;amp;amp;amp;lt;code class=&quot;command&quot;&amp;amp;amp;amp;gt;hexo deploy&amp;amp;amp;amp;lt;/code&amp;amp;amp;amp;gt;は&amp;amp;amp;amp;lt;code class=&quot;command&quot;&amp;amp;amp;amp;gt;hexo d&amp;amp;amp;amp;lt;/code&amp;amp;amp;amp;gt;だけで大丈夫です<br>&amp;amp;amp;amp;lt;/p&amp;amp;amp;amp;gt;</p>
-<p>$ hexo s</p>
-<p><a href="http://localhost:4000" target="_blank" rel="external">http://localhost:4000</a> で確認が終わったらGithub Pagesへデプロイしましょう。</p>
-<p>$ hexo d -g</p>
-<p>これで記事の追加や編集の流れが一通りできるようになり、ブログ構築ができました。<br>ホントに一瞬だったと思います。</p>
-<p>完成したページはこちらです。<br>補足: HEXO Tips</p>
-<p>ここからは、HEXOについてここまでで紹介しなかった、でも役立ちそうなその他のTipsを紹介します。<br>テーマ</p>
-<p>HEXOでは色々なテーマが公開されていて、自由に使うことができます。公開されているテーマを編集してオリジナルテーマの作成も簡単です。この辺りもHEXOを使うメリットだと思います。<br>デフォルトではLandscapeというテーマが適用されています。中国でHEXOが人気なのか、なぜか中国語のものが多いようです。</p>
-<p>参考：公開テーマ一覧</p>
-<p><a href="https://github.com/hexojs/hexo/wiki/Themes" target="_blank" rel="external">https://github.com/hexojs/hexo/wiki/Themes</a></p>
-
-	
-	</div>
-	
-  
-</div>
-	<a type="button" href="/2015/01/27/hexoInstall/#more" class="btn btn-default more">Read More</a>
-</div>
-
-		
 
 		</div>
 
@@ -865,18 +782,16 @@ Github Pagesのリポジトリ
 		<ul class="tag_box inline list-unstyled">		
 		
 		    
-			    <li><a href="/tags/linux/">linux<span>4</span></a></li>
-			
 		
 		    
 			    <li><a href="/tags/工具安装/">工具安装<span>2</span></a></li>
 			
 		
 		    
-		
-		    
 			    <li><a href="/tags/C/">C<span>3</span></a></li>
 			
+		
+		    
 		
 		    
 			    <li><a href="/tags/C/">C++<span>1</span></a></li>
@@ -889,6 +804,8 @@ Github Pagesのリポジトリ
 			
 		
 		    
+			    <li><a href="/tags/linux/">linux<span>5</span></a></li>
+			
 		
 		 
 		</ul>
@@ -902,6 +819,14 @@ Github Pagesのリポジトリ
   <ul class="entry list-unstyled">
     
       <li>
+        <a href="/2015/03/01/alsa-2/" ><i class="fa fa-file-o"></i>alsaの勉強（2）ーー alsaについて簡単な説明</a>
+      </li>
+    
+      <li>
+        <a href="/2015/02/27/sigterm-sigkill/" ><i class="fa fa-file-o"></i>SIGTERM と SIGKILLの何年ぶりの初対面</a>
+      </li>
+    
+      <li>
         <a href="/2015/02/26/share-memory/" ><i class="fa fa-file-o"></i>共有メモリ</a>
       </li>
     
@@ -911,14 +836,6 @@ Github Pagesのリポジトリ
     
       <li>
         <a href="/2015/02/26/ulimit-and-segmentfault/" ><i class="fa fa-file-o"></i>ulimitの説明　と　セグメンテーション違反</a>
-      </li>
-    
-      <li>
-        <a href="/2015/02/25/file-no-close/" ><i class="fa fa-file-o"></i>file-no-close</a>
-      </li>
-    
-      <li>
-        <a href="/2015/02/24/alsa-2/" ><i class="fa fa-file-o"></i>alsaの勉強（2）ーー alsaについて簡単な説明</a>
       </li>
     
   </ul>
