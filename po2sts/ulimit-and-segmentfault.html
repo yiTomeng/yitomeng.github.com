@@ -1,0 +1,212 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>ulimitの説明　と　セグメンテーション違反 | Yly&#39;s Blog</title>
+  <meta name="author" content="Yly">
+  
+  <meta name="description" content="はじめに
+linux Cを開発する時、セグメンテーション違反はよく見えるよね（すげーSE者とPG者を除外）。その時は解決しないといけないだろう。その原因はいつもポインタのせいだと思う。
+一、ulimitにおいて簡単な説明
+でも、環境の問題があるという言い方も存在する(ネットで調べた結果）。例えば、ロ">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="ulimitの説明　と　セグメンテーション違反"/>
+  <meta property="og:site_name" content="Yly&#39;s Blog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  
+  
+    <link href="/favicon.png" rel="icon">
+  
+  
+  <link rel="stylesheet" href="/css/bootstrap.min.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/font-awesome.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/highlight.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/google-fonts.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+  <script src="/js/jquery-2.0.3.min.js"></script>
+
+  <!-- analytics -->
+  
+
+</head>
+
+ <body>  
+  <nav id="main-nav" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+      <button type="button" class="navbar-header navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+		<span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+	  <a class="navbar-brand" href="/">Yly&#39;s Blog</a>
+      <div class="collapse navbar-collapse nav-menu">
+		<ul class="nav navbar-nav">
+		  
+		  <li>
+			<a href="/archives" title="All the articles.">
+			  <i class="fa fa-archive"></i>Archives
+			</a>
+		  </li>
+		  
+		  <li>
+			<a href="/tags" title="All the tags.">
+			  <i class="fa fa-tags"></i>Tags
+			</a>
+		  </li>
+		  
+		</ul>
+      </div>
+    </div> <!-- container -->
+</nav>
+<div class="clearfix"></div>
+
+  <div class="container">
+  	<div class="content">
+    	 
+	
+		<div class="page-header">		
+			<h1> ulimitの説明　と　セグメンテーション違反</h1>
+		</div>		
+	
+
+
+
+<div class="row page">
+	<!-- cols -->
+	
+	<div class="col-md-12">
+	
+
+			
+
+	<!-- content -->
+	<div class="mypage">		
+	    <h2 id="はじめに">はじめに</h2>
+<p>linux Cを開発する時、セグメンテーション違反はよく見えるよね（すげーSE者とPG者を除外）。その時は解決しないといけないだろう。その原因はいつもポインタのせいだと思う。</p>
+<h2 id="一、ulimitにおいて簡単な説明">一、ulimitにおいて簡単な説明</h2>
+<p>でも、環境の問題があるという言い方も存在する(ネットで調べた結果）。例えば、ローカル変数で11MBを使っているが、linuxのデフォルトのスタックサイズは10MBの場合、スタックオーバーフローになってしまうのだ。どのように現在使っている環境のデフォルトスタックサイズを確認できるか？今から説明する。</p>
+<p>現在の環境を確認しようと思ったら、ulimitを使って、目的を達成できる。ulimitに関しては、以下のように使える：</p>
+<pre><code>
+-a    設定されている各種の制限を表示する
+-c    プロセスがファイルへコア・ダンプする容量を最大Nブロックに制限する
+-d    プロセスのデータ領域のサイズを最大Nキロ・バイトに制限する
+-f    出力ファイルのサイズを最大Nブロックに制限する
+-l    メモリーにロックできるサイズを最大Nキロ・バイトに制限する
+-m    メモリーの使用量を最大Nキロ・バイトに制限する
+-n    ファイル・ディスクリプタの数を最大N個に制限する
+-p    パイプのサイズを最大N×512バイトに制限する
+-s    スタック・サイズを最大Nキロ・バイトに制限する
+-t    CPU時間を最大N秒に制限する
+-u    ユーザー1人が起動できるプロセス数を最大N個に制限する
+-v    シェルが利用できる仮想メモリーを最大Nキロ・バイトに制限する
+-H    いったん設定した制限を解除できなくする
+-S    -Hで制限した最大値以内の値を設定する
+-t    コマンドの型を表示する
+</code></pre>
+
+<p>もしスタックサイズを調べてほしいなら、「ulimit -s」を入力すればいい。<br>もしスタックサイズを設定してほしい場合、「ulimit -s SIZE」を入力する（SIZEは設定したがるサイズである）<br>注意するべき点は、この設定したら、今の実行中shellしか効かない。もしシステム全体に効くように設定しようと、/etc/profileに先のコマンドを入力するべきだ。(shellで echo ulimit -s 1024を入力してもいい）。</p>
+<h2 id="二、セグメンテーション違反">二、セグメンテーション違反</h2>
+<p>セグメンテーション違反はC言語のPG者たちに対して、とても厄介なものといっても過言ではない(No1ではないね）。<br>このエラーの原因はいくつある、現在思い出せる原因を挙げましょう：<br>①スタックの領域が足りない。<br>この原因は理解しやすい。スタックが足りない場合、つまり、スタックオーバーフローになってしまう。<br>一つ例を挙げろ：</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> main()</div><div class="line">{</div><div class="line">	main();</div><div class="line">	<span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>上の例により、無限ループで関数を呼び出すと、スタックが足りないので、セグメンテーション違反になる。</p>
+<p>②アプリは使えないアドレスを使おうとする。<br>例えば、</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> *p = NULL;</div><div class="line">*p = <span class="number">4</span>;</div></pre></td></tr></table></figure>
+
+<p>C言語では、NULL = (void *)0、ソースはそうなったら、アドレス０の内容を変更しようと、エラー発生する。</p>
+<p>③変更できない内容を変更しよう<br>また例を挙げましょう：</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">char</span> *p = <span class="string">"Hello core"</span>;</div><div class="line">p[<span class="number">0</span>] = <span class="string">'m'</span>;</div></pre></td></tr></table></figure>
+
+<p>上の用なソースを実行したら、定数をかえようと、セグメンテーション違反が発生する。</p>
+<h2 id="三、セグメンテーション違反のデバッグ">三、セグメンテーション違反のデバッグ</h2>
+<p>①gdbでデバッグ：<br>linuxには最初からgdbがインストールされた場合がおおいから、セグメンテーション違反が発生する場合、gdbで調査できる。<br>例えば、a.out実行するとエラーが発生する場合、[gdb a.out]を入力し、gdbでデバッグを開始させる。それで、「run」を実行すると、実行ファイルが動いている。セグメンテーション違反発生時、デバッグは一旦停止し、どこで止まっているのかが出力された。そうすると、どこが問題なのかをわかっているかもしれない。</p>
+<p>gdbでデバッグはcoreファイルを使って、デバッグもできる。普通にはセグメンテーション違反の場合、core dumpファイルが作成される。（windows アプリと似ている。ウィンドウズでは、デバッグ時、mapファイルとsymbolファイルを事前に作成し、アプリが落ちる場合、dumpファイルも作成される。自動的作成されることがあるかもしれない、もし作成されていない場合、落ちる画面を閉じないままで、タスク管理でアプリの項目を右クリックして、ダンプファイルを作成を選択し、ダンプファイルが作成される）。coreファイルが作成された場合、「gdb core」を入力すると、問題を解けるかもしれない。でも、coreファイルは自動作成できない場合がおおい。その原因はcoreファイルのサイズはデフォルト値０に設定されたから。もしcoreファイルを作成しようと思ったら、前のulimitを使って、「ulimit -c 1024」設定してからcoreファイルが自動的に作成される。</p>
+<p>②backtrace()とobjdumpを使って、セグメンテーション違反場所を探す。<br>この方法はちゃんと見ていないので、後回す</p>
+<p>ps:<br>不具合調査するときは、「objdump」と「nm」コマンドも使っていた。<br>-rdynamic 全部フラグをダイナミックフラグとしてフラグ表に入れる。<br>[他の場所見つからなかったので、中国語で説明]g++ 加上 -rdynamic 参数实质上相当于ld链接的时候加上-E或者–export-dynamic参数，效果与g++ -Wl,-E或者g++ -Wl,–export-dynamic的效果是一样的。</p>
+<p>-gdb補充：<br><code>x&#39; というコマンド (</code>examine’ からの由来) は、プログラムのデータ 型を参照せずにメモリを調べるときに使うことができます。あなたが調べたい メモリのフォーマットは、系統だった方法で記述されます。許可されている フォーマットは、以前の章で述べてきたフォーマットのスーパーセットに なっています。</p>
+<p><code>x&#39; はスラッシュの後にフォーマットに関する記述、そしてその後に アドレスに関する記述を受け付けます。式には (もし通したとしても) ポインタ 値が使えないので; そこにはメモリのバイト列の整数値やアドレスが使われます。 式の詳細は、See section 式。 例えば、</code>x/4xw $sp’ はスタックポインタ上のメモリを4ワードの 16進数で表示します。</p>
+<p>このケースにおける出力フォーマットでは、調査するメモリの大きさと、 そのユニットの内容をどのように表示するのかということを記述します。 これには、この後に説明する1つか2つの文字で指定します:</p>
+<p>次に示す文字は、まさに調査対象のユニットのサイズを記述します:</p>
+<p><code>b&#39;
+単一バイトで調査します。</code>h’<br>半ワード (2バイト) で調査します。<br><code>w&#39;
+ワード (4バイト) で調査します。 多くのアセンブラとCPU設計者は、祖先となる1970年代のマシンが実際に 2バイトのワードを利用していたという名残により、</code>ワード’をいまだ 16ビットのサイズとして定義しています。しかし、一般的に言うと、 <code>ワード&#39;は、マシンが通常レジスタで操作したり記憶したりするサイズだと いうのが、語源です。GDB が動作する全てのマシンにおいて、このサイズは 32ビットです。</code>g’<br>巨大ワード (8バイト) で調査します。<br>次の文字は内容を表示する方法を記述するためのものです:</p>
+<p><code>x&#39;
+符号なし16進整数値で表示します。</code>d’<br>符号付き10進整数値で表示します。<br><code>u&#39;
+符号なし10進整数値で表示します。</code>o’<br>符号なし8進整数値で表示します。<br><code>a&#39;
+絶対アドレス、またはシンボルに定義された相対アドレスで表示します。</code>c’<br>文字定数で表示します。<br><code>f&#39;
+浮動小数点で表示します。これは、</code>w’ と <code>g&#39; のサイズでのみ 有効です。</code>s’<br>null-ターミネートされた文字列として表示します。指定されたユニットサイズは 無視され; かわりに null キャラクタまで達する多くの (null キャラクタを含んだ) バイト 列を持つことになります。<br>`i’<br>アセンブラ・シンタックスでの (もしくは、それに近い) マシン・ インストラクションを表示します。指定されたユニットサイズは無視され; 1つのインストラクションを構成するバイト数は、そのマシンで利用されている オペコードとアドレッシングモードの種類に依存します。<br>表示方法やユニットサイズの指定がなかった場合、使用されるデフォルト値は 最後に使用されたのと同じものです。もし、あなたがスラッシュの後に何の 文字も使用したくないという場合は、スラッシュもまた省略できます。</p>
+<p>あなたは、また、調査対象アドレスも省略可能です。この場合、ユニットが 最後に調査されたアドレスが使用されます。これは、データをベースとして ユニットサイズが計算されるような、文字列とインストラクション・ フォーマットのためのものです: というのも、次の文字列やインストラクションは正しい位置から調査を 開始しなければならないからです。<code>print&#39; コマンドは、時折</code>x’ コマンドのためのデフォルトアドレスを設定します; メモリ上に位置する値が表示された時、デフォルトで同一の 位置が設定されています。<code>info line&#39; はまた</code>x’ と同様に 指定された行のマシンコードの開始アドレスにデフォルトを設定し、 `info breakpoints’ は、最後に表示されたブレークポイントの アドレスにデフォルトを設定します。</p>
+<p>RET により `x’ コマンドがリピートされた時は全く同様の内容を リピートしません: 指定されたアドレスは (もしあれば) 無視され、リピートされたコマンドは 同一の場所のかわりに連続したメモリ位置を調査します。</p>
+<p>あなたは、更に、コマンドに対してスラッシュの後に (また、もしあれば フォーマット文字の前に) 繰り返し回数を書くことで、いくつかの連続的な メモリユニットを調査することができます。繰り返し回数は10進数の整数で なければなりません。これは、`x’ コマンドがリピートされた時と 同様な効果を持ち、出力は行ごとのいくつかのユニットに対して、より コンパクトになります。例えば、</p>
+<p>x/10i $pc<br>は、選択されているフレームにおいて次に実行されるインストラクションから 10個のインストラクションを表示します。この後、あなたは、次のように入力 することで、更に10個のインストラクションを表示できます。</p>
+<p>x/10<br>これは、フォーマットとアドレスにおいてデフォルト値が使われるからです。</p>
+<p>`x’ コマンドによって表示されるアドレスとその内容は、それらが あまりにも多すぎ、それらを記録するのが邪魔なので、変数履歴に代入 されません。そのかわりに、GDB は、簡易変数 $<em> と $_</em> の 値を式で使うという別な手段を提供しています。</p>
+<p>`x’ コマンドの後、最後に調査されたアドレスは、 式内の簡易変数 $<em> によって参照可能となります。そのアドレスの 内容は、調査されたならば、簡易変数 $_</em> においても有効です。</p>
+<p>もし、`x’ コマンドが繰り返されたならば、アドレスと内容は最後に 表示されたメモリユニットの形態として保存されます; これは、最後の行の出力においていくつかのユニットが表示された時の 最後のアドレス表示の内容とは異なります。</p>
+<p>`disassemble’ という特別なコマンドは、与えられたメモリレンジを マシン・インストラクションとしてダンプします。デフォルトのメモリ レンジは、選択されているフレーム上のプログラムカウンタを取り囲む 関数の範囲です。このコマンドへ一つの引数を渡した場合、これは、 プログラムカウンタ値となります; この値を取り囲む関数がダンプされます。2つの引数を渡した場合は、 ダンプするアドレスの範囲を示します。(最初が包括的、2つ目が排他的。)</p>
+	  
+	</div>
+
+	<div>
+  	<center>
+	<div class="pagination">
+<ul class="pagination">
+	 
+</ul>
+</div>
+
+    </center>
+	</div>
+	
+	<!-- comment -->
+	
+	
+	</div> <!-- col-md-9/col-md-12 -->
+	
+	
+
+</div><!-- row -->
+
+	</div>
+  </div>
+  <div class="container-narrow">
+  <footer> <p>
+  &copy; 2015 Yly
+  
+      with help from <a href="http://zespia.tw/hexo/" target="_blank">Hexo</a> and <a href="http://getbootstrap.com/" target="_blank">Twitter Bootstrap</a>. Theme by <a href="http://github.com/wzpan/hexo-theme-freemind/">Freemind</a>.    
+</p> </footer>
+</div> <!-- container-narrow -->
+  
+<a id="gotop" href="#">   
+  <span>▲</span> 
+</a>
+
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+   </html>

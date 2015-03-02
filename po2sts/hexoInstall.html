@@ -1,0 +1,251 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Yly&#39;s Blog</title>
+  <meta name="author" content="Yly">
+  
+  <meta name="description" content="title: hexo Installdate: 2015-01-27 09:58:36
+tags:　hexo Install
+こんにちは、エンジニアののびすけです。静的サイトをいやらしい風にtypoする今日この頃です。
+前回、Github Pagesを使ったWebページ公開の記事「Git初心者でも">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="Yly&#39;s Blog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  
+  
+    <link href="/favicon.png" rel="icon">
+  
+  
+  <link rel="stylesheet" href="/css/bootstrap.min.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/font-awesome.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/highlight.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/google-fonts.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+  <script src="/js/jquery-2.0.3.min.js"></script>
+
+  <!-- analytics -->
+  
+
+</head>
+
+ <body>  
+  <nav id="main-nav" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+      <button type="button" class="navbar-header navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+		<span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+	  <a class="navbar-brand" href="/">Yly&#39;s Blog</a>
+      <div class="collapse navbar-collapse nav-menu">
+		<ul class="nav navbar-nav">
+		  
+		  <li>
+			<a href="/archives" title="All the articles.">
+			  <i class="fa fa-archive"></i>Archives
+			</a>
+		  </li>
+		  
+		  <li>
+			<a href="/tags" title="All the tags.">
+			  <i class="fa fa-tags"></i>Tags
+			</a>
+		  </li>
+		  
+		</ul>
+      </div>
+    </div> <!-- container -->
+</nav>
+<div class="clearfix"></div>
+
+  <div class="container">
+  	<div class="content">
+    	 
+	
+		<div class="page-header">		
+			<h1> </h1>
+		</div>		
+	
+
+
+
+<div class="row page">
+	<!-- cols -->
+	
+	<div class="col-md-12">
+	
+
+			
+
+	<!-- content -->
+	<div class="mypage">		
+	    <p>title: hexo Install<br>date: 2015-01-27 09:58:36</p>
+<h2 id="tags:_hexo_Install">tags:　hexo Install</h2>
+<p>こんにちは、エンジニアののびすけです。静的サイトをいやらしい風にtypoする今日この頃です。</p>
+<p>前回、Github Pagesを使ったWebページ公開の記事「Git初心者でも大丈夫！完全無料でGithub PagesにWebページを公開する方法」を書きました。</p>
+<p>Github Pagesではデータベースやサーバーサイドプログラムを使うことができないので、弊社ブログのようにWordPressを使ってブログ構築をすることはできません。</p>
+<p>そこで今回は静的サイトジェネレータとGithub Pagesを組み合わせることで無料でブログを公開する方法を紹介します。<br>静的サイトジェネレータ</p>
+<p>静的サイトジェネレータとはコマンドラインでのカンタンな操作でHTML/CSS/JavaScriptなどを生成し、Webページ作成を少ない手間で作ることができるツールの総称です。</p>
+<p>静的なページにすることで、</p>
+<pre><code>セキュリティリスクが少ない
+SEOに強い
+表示速度が高速
+</code></pre><p>といったメリットもあります。</p>
+<p>JekyllというRuby製のツールが今のところ最も有名ですが、静的サイトジェネレータは色々な人が作っていて、乱立している状態です。</p>
+<p>StaticSiteGeneratorsというサイトでは、現時点での静的サイトジェネレータ一覧を見ることができます。2014/7/29現在では289種類ものジェネレータが存在するみたいです。</p>
+<p>これらのツールはGithub上でソースコードを公開していて、Githubのスター(ブックマークのようなもの)の数でのランキングを見てみると、</p>
+<pre><code><span class="title">Jekyll</span>
+Octopress
+Pelican
+Middleman
+Hexo
+</code></pre><p>という順番で人気があることが分かります。今回はこの中でもJavaScript製のHEXOを利用してみたいと思います。</p>
+<p>参考：Static Site Generators</p>
+<p><a href="http://staticsitegenerators.net/" target="_blank" rel="external">http://staticsitegenerators.net/</a><br>HEXO</p>
+<p>人気上位のJekyllやOctopressはRuby製のツールですが、私は全てJavaScriptで完結させたいと思っているので、Node.js製のHEXOを利用してみます。<br>（HEXO以外にもmetalsmith、DocPad、Harp、Wintersmith、assembleなどのツールもNode.jsで作られていますが、今回は割愛します。）</p>
+<p>HEXOは数ある静的サイトジェネレータの中でもブログ生成に特化しています。記事はMarkDown方式で書くことができ、カンタンなコマンドでページの追加やテーマ、プラグインのインストールができます。</p>
+<p>参考：HEXO</p>
+<p><a href="http://hexo.io/" target="_blank" rel="external">http://hexo.io/</a></p>
+<p>参考：JekyllからHexoに移行した｜じまぐてっく</p>
+<p><a href="http://nakajmg.github.io/blog/2014-07-21/change-generator.html" target="_blank" rel="external">http://nakajmg.github.io/blog/2014-07-21/change-generator.html</a><br>HEXOで作ったブログを2分でGithub Pagesへ公開<br>準備</p>
+<p>まずは、以下の環境を揃えてください。</p>
+<pre><code>Node.jsが動く環境
+Github Pagesのリポジトリ
+</code></pre><p>Node.jsのインストールをしていない人は、こちらの記事を参考にしてNode.jsをインストールしてください。</p>
+<p>「いまアツいJavaScript！ゼロから始めるNode.js入門〜5分で環境構築編〜」</p>
+<p>Github PagesでWebページ公開をしたことがない人は、こちらの記事を参考にしてGithub Pagesのリポジトリを作ってみましょう。</p>
+<p>参考：Git初心者でも大丈夫！完全無料でGithub PagesにWebページを公開する方法<br><a href="http://liginc.co.jp/web/html-css/html/96453" target="_blank" rel="external">http://liginc.co.jp/web/html-css/html/96453</a><br>HEXOを使い1分でブログ生成</p>
+<p>HEXOをインストールしましょう。npm installで簡単にインストールできます。</p>
+<p>$ npm install -g hexo</p>
+<p>次にブログを作ってみます。hexo init [プロジェクト名]でブログのひな形を生成できます。今回はmyblogという名前で作ってみます。</p>
+<p>$ hexo init myblog</p>
+<p>myblogというフォルダが生成されます。</p>
+<p>myblogフォルダへ移動して必要なモジュールをインストールします。</p>
+<p>$ cd myblog<br>$ npm install</p>
+<p>たったこれだけで準備は完了です。</p>
+<p>ローカルサーバーを立ち上げてみましょう。</p>
+<p>$ hexo server<br>[info] Hexo is running at <a href="http://localhost:4000/" target="_blank" rel="external">http://localhost:4000/</a>. Press Ctrl+C to stop.</p>
+<p>この状態でブラウザから<a href="http://localhost:4000/にアクセスしてみましょう。" target="_blank" rel="external">http://localhost:4000/にアクセスしてみましょう。</a></p>
+<p>こんな感じでブログができ上がっていると思います。</p>
+<p>めちゃ簡単ですね！ そして爆速！</p>
+<p>確認ができたら、</p>
+<p>Ctrl ＋C</p>
+<p>でサーバーを止めることができます。<br>HEXOで作ったブログをGithub Pagesで公開する</p>
+<p>上記の手順でブログ生成ができたので、このブログを世界に向けて公開してみましょう。</p>
+<p>lsコマンドでmyblogフォルダの中を確認すると_config.ymlというファイルが生成されていることがわかります。</p>
+<p>$ ls<br>_config.yml  node_modules scaffolds    themes<br>db.json      package.json source</p>
+<p>HEXOではこの_config.ymlが設定ファイルになっていて、このファイルにGithub Pagesの設定を記述していきます。</p>
+<p>エディタで_config.ymlを編集しましょう。</p>
+<p>$ vi _config.yml</p>
+<p>デフォルトの状態はこのような記述になっています。</p>
+<p>・・・(省略)・・・</p>
+<h1 id="Deployment">Deployment</h1>
+<h2 id="Docs:_http://hexo-io/docs/deployment-html">Docs: <a href="http://hexo.io/docs/deployment.html" target="_blank" rel="external">http://hexo.io/docs/deployment.html</a></h2>
+<p>deploy:<br>  type:</p>
+<p>これを以下のように編集しましょう。</p>
+<p>・・・(省略)・・・</p>
+<h1 id="Deployment-1">Deployment</h1>
+<h2 id="Docs:_http://hexo-io/docs/deployment-html-1">Docs: <a href="http://hexo.io/docs/deployment.html" target="_blank" rel="external">http://hexo.io/docs/deployment.html</a></h2>
+<p>deploy:<br>  type: github<br>  repo: git@github.com:n0bisuke/n0bisuke.github.io.git<br>  branch: master</p>
+<p>repoの部分は自分のGithub Pagesのリポジトリに合わせて適宜変更してください。<br>設定が完了したら、以下のコマンドでデプロイをします。<br>generateというコマンドで静的HTMLをpublicフォルダ内に生成することができるのですが、deployコマンドに-gオプションを付けることで、これを同時に行ってくれます。</p>
+<p>$ hexo deploy -g</p>
+<p>エラーが出なければ成功です。自分のGithub Pagesのページを見てみましょう。</p>
+<p>私のGithub PagesでもHEXOでブログを作ってみたので、デモ画面として確認してみてください。<br>記事を追加してみる</p>
+<p>HEXOでは記事の追加も凄まじく簡単です。</p>
+<p>$ hexo new &quot;新規ページタイトル&quot;</p>
+<p>これだけで記事の追加ができます。</p>
+<p>例えば “hexoについて”という記事ページを追加する場合は以下の通りです。</p>
+<p>hexo new &quot;hexoについて&quot;<br>[info] File created at /Users/nobisuke/Sites/myblog/source/_posts/hexoについて.md</p>
+<p>source/_postsフォルダに”hexoについて.md”というMarkDownファイルが生成されていると思います。<br>あとはこのMarkDownファイルを編集すれば記事の詳細を書くことができます。</p>
+<p>$ vi source/_posts/hexoについて.md</p>
+<p>MarkDownファイルを開くと以下のように記述されています。</p>
+<p>title: hexoについて<br>date: 2014-07-29 19:29:05</p>
+<h2 id="tags:">tags:</h2>
+<p>(ここに本文を記述)</p>
+<p>titleとdateにはあらかじめメタ情報が付与されていると思います。<br>tagsには任意のタグを設定することができます。今回はhexoというタグを付けてみました。<br>本文は—の下にMarkDownで書いていきます。HTMLでも記述可能です。</p>
+<p>title: hexoについて<br>date: 2014-07-29 19:29:05</p>
+<h2 id="tags:_hexo">tags: hexo</h2>
+<h1 id="hexoとは">hexoとは</h1>
+<p>静的サイトジェネレータの1つです。</p>
+<h1 id="シンタックス">シンタックス</h1>
+<p><a href="http://qiita.com" target="_blank" rel="external">Qiita</a>のようにシンタックスハイライトされます。</p>
+<figure class="highlight server.js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"> </div><div class="line"><span class="keyword">var</span> http = <span class="built_in">require</span>(<span class="string">'http'</span>);</div><div class="line">http.createServer(<span class="function"><span class="keyword">function</span> <span class="params">(req, res)</span> </span>{</div><div class="line">  res.writeHead(<span class="number">200</span>, {<span class="string">'Content-Type'</span>: <span class="string">'text/plain'</span>});</div><div class="line">  res.end(<span class="string">'Hello World\n'</span>);</div><div class="line">}).listen(<span class="number">1337</span>, <span class="string">'127.0.0.1'</span>);</div><div class="line"><span class="built_in">console</span>.log(<span class="string">'Server running at http://127.0.0.1:1337/'</span>);</div></pre></td></tr></table></figure>
+
+<p>&amp;amp;amp;amp;lt;p&amp;amp;amp;amp;gt;<br>記事の編集が終わったら、ローカル環境で確認してみましょう。<br>&amp;amp;amp;amp;lt;/p&amp;amp;amp;amp;gt;<br>&amp;amp;amp;amp;lt;p&amp;amp;amp;amp;gt;<br>先程と同じように&amp;amp;amp;amp;lt;code class=&quot;command&quot;&amp;amp;amp;amp;gt;hexo server&amp;amp;amp;amp;lt;/code&amp;amp;amp;amp;gt;コマンドでローカルサーバーを立ち上げて確認しましょう。<br>&amp;amp;amp;amp;lt;/p&amp;amp;amp;amp;gt;<br>&amp;amp;amp;amp;lt;p&amp;amp;amp;amp;gt;<br>実は&amp;amp;amp;amp;lt;code class=&quot;command&quot;&amp;amp;amp;amp;gt;hexo server&amp;amp;amp;amp;lt;/code&amp;amp;amp;amp;gt;は&amp;amp;amp;amp;lt;code class=&quot;command&quot;&amp;amp;amp;amp;gt;hexo s&amp;amp;amp;amp;lt;/code&amp;amp;amp;amp;gt;としても同じ動作をするのでショートカットとして使うと良いと思います。<br>同じように&amp;amp;amp;amp;lt;code class=&quot;command&quot;&amp;amp;amp;amp;gt;hexo deploy&amp;amp;amp;amp;lt;/code&amp;amp;amp;amp;gt;は&amp;amp;amp;amp;lt;code class=&quot;command&quot;&amp;amp;amp;amp;gt;hexo d&amp;amp;amp;amp;lt;/code&amp;amp;amp;amp;gt;だけで大丈夫です<br>&amp;amp;amp;amp;lt;/p&amp;amp;amp;amp;gt;</p>
+<p>$ hexo s</p>
+<p><a href="http://localhost:4000" target="_blank" rel="external">http://localhost:4000</a> で確認が終わったらGithub Pagesへデプロイしましょう。</p>
+<p>$ hexo d -g</p>
+<p>これで記事の追加や編集の流れが一通りできるようになり、ブログ構築ができました。<br>ホントに一瞬だったと思います。</p>
+<p>完成したページはこちらです。<br>補足: HEXO Tips</p>
+<p>ここからは、HEXOについてここまでで紹介しなかった、でも役立ちそうなその他のTipsを紹介します。<br>テーマ</p>
+<p>HEXOでは色々なテーマが公開されていて、自由に使うことができます。公開されているテーマを編集してオリジナルテーマの作成も簡単です。この辺りもHEXOを使うメリットだと思います。<br>デフォルトではLandscapeというテーマが適用されています。中国でHEXOが人気なのか、なぜか中国語のものが多いようです。</p>
+<p>参考：公開テーマ一覧</p>
+<p><a href="https://github.com/hexojs/hexo/wiki/Themes" target="_blank" rel="external">https://github.com/hexojs/hexo/wiki/Themes</a></p>
+	  
+	</div>
+
+	<div>
+  	<center>
+	<div class="pagination">
+<ul class="pagination">
+	 
+</ul>
+</div>
+
+    </center>
+	</div>
+	
+	<!-- comment -->
+	
+	
+	</div> <!-- col-md-9/col-md-12 -->
+	
+	
+
+</div><!-- row -->
+
+	</div>
+  </div>
+  <div class="container-narrow">
+  <footer> <p>
+  &copy; 2015 Yly
+  
+      with help from <a href="http://zespia.tw/hexo/" target="_blank">Hexo</a> and <a href="http://getbootstrap.com/" target="_blank">Twitter Bootstrap</a>. Theme by <a href="http://github.com/wzpan/hexo-theme-freemind/">Freemind</a>.    
+</p> </footer>
+</div> <!-- container-narrow -->
+  
+<a id="gotop" href="#">   
+  <span>▲</span> 
+</a>
+
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+   </html>

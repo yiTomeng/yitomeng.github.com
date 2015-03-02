@@ -1,0 +1,169 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>file-no-close | Yly&#39;s Blog</title>
+  <meta name="author" content="Yly">
+  
+  <meta name="description" content="今回はファイル処理について、今まで見たことないことが現れる。ファイルを操作するときには、fopen()-&amp;gt;処理-&amp;gt;fclose()は常識です。普通に実装したら問題無いはずです(手順的に。処理の中に何があったら問題ある可能性もある、C言語だからな)。もしもの場合、ファイルをfopen()に">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="file-no-close"/>
+  <meta property="og:site_name" content="Yly&#39;s Blog"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  
+  
+    <link href="/favicon.png" rel="icon">
+  
+  
+  <link rel="stylesheet" href="/css/bootstrap.min.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/font-awesome.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/highlight.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/google-fonts.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+  <script src="/js/jquery-2.0.3.min.js"></script>
+
+  <!-- analytics -->
+  
+
+</head>
+
+ <body>  
+  <nav id="main-nav" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+      <button type="button" class="navbar-header navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+		<span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+	  <a class="navbar-brand" href="/">Yly&#39;s Blog</a>
+      <div class="collapse navbar-collapse nav-menu">
+		<ul class="nav navbar-nav">
+		  
+		  <li>
+			<a href="/archives" title="All the articles.">
+			  <i class="fa fa-archive"></i>Archives
+			</a>
+		  </li>
+		  
+		  <li>
+			<a href="/tags" title="All the tags.">
+			  <i class="fa fa-tags"></i>Tags
+			</a>
+		  </li>
+		  
+		</ul>
+      </div>
+    </div> <!-- container -->
+</nav>
+<div class="clearfix"></div>
+
+  <div class="container">
+  	<div class="content">
+    	 
+	
+		<div class="page-header">		
+			<h1> file-no-close</h1>
+		</div>		
+	
+
+
+
+<div class="row page">
+	<!-- cols -->
+	
+	<div class="col-md-12">
+	
+
+			
+
+	<!-- content -->
+	<div class="mypage">		
+	    <p>今回はファイル処理について、今まで見たことないことが現れる。<br>ファイルを操作するときには、fopen()-&gt;処理-&gt;fclose()は常識です。普通に実装したら問題無いはずです(手順的に。処理の中に何があったら問題ある可能性もある、C言語だからな)。もしもの場合、ファイルをfopen()により開いても、最後にfclose()を呼び出すことを忘れてしまったら、どうなるかな？<br>その場合、ファイルのポインタが開放されないとのことだ。少ない場合では多分気づかないが、一旦無限ループで（何百回、何千回、何万回以上の場合）、処理分はセグメンテーション違反になっていしまう。とりあえず、例をあげましょう：</p>
+<h3 id="１．失敗した例：">１．失敗した例：</h3>
+<p>①：</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdio.h&gt;</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdlib.h&gt;</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;string.h&gt;</span></div><div class="line"></div><div class="line"><span class="keyword">int</span> main(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</div><div class="line">{</div><div class="line"></div><div class="line">	<span class="comment">/*fread asm*/</span></div><div class="line">	FILE *fp = NULL;</div><div class="line">	<span class="keyword">int</span> len = <span class="number">0</span>;</div><div class="line">	<span class="keyword">char</span> buf[BUFSIZ];</div><div class="line">	<span class="built_in">memset</span>(buf, <span class="number">0x00</span>, BUFSIZ);</div><div class="line">	<span class="keyword">if</span> ( <span class="number">0</span> &gt; (fp = fopen(<span class="string">"read.txt"</span>, <span class="string">"r"</span>)) )</div><div class="line">	{</div><div class="line">		<span class="built_in">printf</span>(<span class="string">"file open error\n"</span>);</div><div class="line">		<span class="built_in">exit</span>(<span class="number">1</span>);</div><div class="line">	}</div><div class="line"></div><div class="line">	<span class="keyword">while</span>(!feof(fp))</div><div class="line">	{</div><div class="line">		<span class="built_in">memset</span>(buf, <span class="number">0x00</span>, BUFSIZ);</div><div class="line"></div><div class="line">		len = fread(buf, <span class="number">1</span>, <span class="number">3</span>, fp);</div><div class="line">		</div><div class="line">		<span class="built_in">printf</span>(<span class="string">"buf:%s\n"</span>, buf);</div><div class="line">	}</div><div class="line">	</div><div class="line">	<span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>この例には、最後にfclose()呼び出していないせいで、ダメなコードになっていしまうけど、実行すると、エラーが出ない、PG者が気づかない可能性が高い。</p>
+<p>②：</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdio.h&gt;</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdlib.h&gt;</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;string.h&gt;</span></div><div class="line"></div><div class="line"><span class="keyword">int</span> main(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</div><div class="line">{</div><div class="line">	FILE *fp = NULL;</div><div class="line">	<span class="keyword">int</span> len = <span class="number">0</span>;</div><div class="line">	<span class="keyword">char</span> buf[BUFSIZ];</div><div class="line">	<span class="built_in">memset</span>(buf, <span class="number">0x00</span>, BUFSIZ);</div><div class="line"></div><div class="line">	<span class="keyword">while</span>(<span class="number">1</span>)</div><div class="line">	{</div><div class="line">		<span class="keyword">if</span> ( <span class="number">0</span> &gt; (fp = fopen(<span class="string">"read.txt"</span>, <span class="string">"r"</span>)) )</div><div class="line">		{</div><div class="line">			<span class="built_in">printf</span>(<span class="string">"file open error\n"</span>);</div><div class="line">			<span class="built_in">exit</span>(<span class="number">1</span>);</div><div class="line">		}</div><div class="line"></div><div class="line">		<span class="keyword">while</span>(!feof(fp))</div><div class="line">		{</div><div class="line">			<span class="built_in">memset</span>(buf, <span class="number">0x00</span>, BUFSIZ);</div><div class="line"></div><div class="line">			len = fread(buf, <span class="number">1</span>, <span class="number">3</span>, fp);</div><div class="line">			</div><div class="line">			<span class="built_in">printf</span>(<span class="string">"buf:%s\n"</span>, buf);</div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>この例には、毎回最後にfclose()呼び出していないせいで、セグメンテーション違反になっていしまう。</p>
+<p>③：</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdio.h&gt;</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdlib.h&gt;</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;string.h&gt;</span></div><div class="line"></div><div class="line"><span class="keyword">int</span> main(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</div><div class="line">{</div><div class="line"></div><div class="line">	FILE *fp = NULL;</div><div class="line">	<span class="keyword">int</span> len  = <span class="number">0</span>;</div><div class="line">	<span class="keyword">char</span> buf[BUFSIZ];</div><div class="line">	<span class="built_in">memset</span>(buf, <span class="number">0x00</span>, BUFSIZ);</div><div class="line"></div><div class="line">	<span class="keyword">while</span>(<span class="number">1</span>)</div><div class="line">	{</div><div class="line">		</div><div class="line">		<span class="keyword">if</span> ( <span class="number">0</span> &gt; (fp = fopen(<span class="string">"read.txt"</span>, <span class="string">"r"</span>)) )</div><div class="line">		{</div><div class="line">			<span class="built_in">printf</span>(<span class="string">"file open error\n"</span>);</div><div class="line">			<span class="built_in">exit</span>(<span class="number">1</span>);</div><div class="line">		}</div><div class="line"></div><div class="line">		<span class="keyword">while</span>(!feof(fp))</div><div class="line">		{</div><div class="line">			<span class="built_in">memset</span>(buf, <span class="number">0x00</span>, BUFSIZ);</div><div class="line"></div><div class="line">			len = fread(buf, <span class="number">1</span>, <span class="number">3</span>, fp);</div><div class="line">			</div><div class="line">			<span class="built_in">printf</span>(<span class="string">"buf:%s\n"</span>, buf);</div><div class="line">		}</div><div class="line">		fclose(fp);</div><div class="line">	}</div><div class="line">	<span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>この例については：windows7のcygwinで実行すると、エラーがないけど、asianuxでテストするときはfeof()にセグメンテーション違反になっていしまう（テストするときに何か間違っていたかもしれない）。</p>
+<h3 id="２．成功した例：">２．成功した例：</h3>
+<p>①:</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdio.h&gt;</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdlib.h&gt;</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;string.h&gt;</span></div><div class="line"></div><div class="line"><span class="keyword">int</span> main(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</div><div class="line">{</div><div class="line"></div><div class="line">	<span class="comment">/*fread asm*/</span></div><div class="line">	FILE *fp = NULL;</div><div class="line">	<span class="keyword">int</span> len = <span class="number">0</span>;</div><div class="line">	<span class="keyword">char</span> buf[BUFSIZ];</div><div class="line">	<span class="built_in">memset</span>(buf, <span class="number">0x00</span>, BUFSIZ);</div><div class="line">	<span class="keyword">if</span> ( <span class="number">0</span> &gt; (fp = fopen(<span class="string">"read.txt"</span>, <span class="string">"r"</span>)) )</div><div class="line">	{</div><div class="line">		<span class="built_in">printf</span>(<span class="string">"file open error\n"</span>);</div><div class="line">		<span class="built_in">exit</span>(<span class="number">1</span>);</div><div class="line">	}</div><div class="line"></div><div class="line">	<span class="keyword">while</span>(!feof(fp))</div><div class="line">	{</div><div class="line">		<span class="built_in">memset</span>(buf, <span class="number">0x00</span>, BUFSIZ);</div><div class="line"></div><div class="line">		len = fread(buf, <span class="number">1</span>, <span class="number">3</span>, fp);</div><div class="line">		</div><div class="line">		<span class="built_in">printf</span>(<span class="string">"buf:%s\n"</span>, buf);</div><div class="line">	}</div><div class="line"></div><div class="line">	fclose(fp);</div><div class="line">	</div><div class="line">	<span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>これは一回だけファイルをオープンするもの。<br>②：</p>
+<figure class="highlight C"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdio.h&gt;</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdlib.h&gt;</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;string.h&gt;</span></div><div class="line"></div><div class="line"><span class="keyword">int</span> main(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</div><div class="line">{</div><div class="line"></div><div class="line">	<span class="comment">/*fread asm*/</span></div><div class="line">	<span class="keyword">while</span>(<span class="number">1</span>)</div><div class="line">	{</div><div class="line">		FILE *fp = NULL;</div><div class="line">		<span class="keyword">int</span> len = <span class="number">0</span>;</div><div class="line">		<span class="keyword">char</span> buf[BUFSIZ];</div><div class="line">		<span class="built_in">memset</span>(buf, <span class="number">0x00</span>, BUFSIZ);</div><div class="line">		<span class="keyword">if</span> ( <span class="number">0</span> &gt; (fp = fopen(<span class="string">"read.txt"</span>, <span class="string">"r"</span>)) )</div><div class="line">		{</div><div class="line">			<span class="built_in">printf</span>(<span class="string">"file open error\n"</span>);</div><div class="line">			<span class="built_in">exit</span>(<span class="number">1</span>);</div><div class="line">		}</div><div class="line"></div><div class="line">		<span class="keyword">while</span>(!feof(fp))</div><div class="line">		{</div><div class="line">			<span class="built_in">memset</span>(buf, <span class="number">0x00</span>, BUFSIZ);</div><div class="line"></div><div class="line">			len = fread(buf, <span class="number">1</span>, <span class="number">3</span>, fp);</div><div class="line">			</div><div class="line">			<span class="built_in">printf</span>(<span class="string">"buf:%s\n"</span>, buf);</div><div class="line">		}</div><div class="line">		fclose(fp);</div><div class="line">	}</div><div class="line">	<span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>この例と実際のプロジェクトの仕組み大体似ている。</p>
+<p>初心者でもわかっていることを忘れちゃったなんて、恥ずかしいやな。とりあえず今度は絶対に忘れないからな。</p>
+	  
+	</div>
+
+	<div>
+  	<center>
+	<div class="pagination">
+<ul class="pagination">
+	 
+</ul>
+</div>
+
+    </center>
+	</div>
+	
+	<!-- comment -->
+	
+	
+	</div> <!-- col-md-9/col-md-12 -->
+	
+	
+
+</div><!-- row -->
+
+	</div>
+  </div>
+  <div class="container-narrow">
+  <footer> <p>
+  &copy; 2015 Yly
+  
+      with help from <a href="http://zespia.tw/hexo/" target="_blank">Hexo</a> and <a href="http://getbootstrap.com/" target="_blank">Twitter Bootstrap</a>. Theme by <a href="http://github.com/wzpan/hexo-theme-freemind/">Freemind</a>.    
+</p> </footer>
+</div> <!-- container-narrow -->
+  
+<a id="gotop" href="#">   
+  <span>▲</span> 
+</a>
+
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+   </html>
